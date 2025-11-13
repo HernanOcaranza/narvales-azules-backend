@@ -1,0 +1,179 @@
+/api/disciplinas:
+  get:
+    summary: Obtener todas las disciplinas
+    tags: [Disciplinas]
+    responses:
+      200:
+        description: Lista de disciplinas obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Disciplinas obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Disciplina'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear una nueva disciplina
+    tags: [Disciplinas]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - disciplina
+            properties:
+              disciplina:
+                type: string
+                maxLength: 20
+                example: Natación
+                description: Nombre de la disciplina
+    responses:
+      201:
+        description: Disciplina creada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Disciplina creada correctamente
+                data:
+                  $ref: '#/components/schemas/Disciplina'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/disciplinas/{id}:
+  get:
+    summary: Obtener una disciplina por ID
+    tags: [Disciplinas]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la disciplina
+    responses:
+      200:
+        description: Disciplina obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Disciplina obtenida correctamente
+                data:
+                  $ref: '#/components/schemas/Disciplina'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar una disciplina existente
+    tags: [Disciplinas]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la disciplina
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              disciplina:
+                type: string
+                maxLength: 20
+                example: Waterpolo
+                description: Nombre de la disciplina
+    responses:
+      200:
+        description: Disciplina actualizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Disciplina actualizada correctamente
+                data:
+                  $ref: '#/components/schemas/Disciplina'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar una disciplina
+    tags: [Disciplinas]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la disciplina
+    responses:
+      200:
+        description: Disciplina eliminada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Disciplina eliminada correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Disciplina eliminada correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

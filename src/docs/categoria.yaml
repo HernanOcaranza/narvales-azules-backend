@@ -1,0 +1,190 @@
+/api/categorias:
+  get:
+    summary: Obtener todas las categorías
+    tags: [Categorías]
+    responses:
+      200:
+        description: Lista de categorías obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Categorías obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Categoria'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear una nueva categoría
+    tags: [Categorías]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - categoria
+              - descripcion
+            properties:
+              categoria:
+                type: string
+                maxLength: 20
+                example: Infantil
+                description: Nombre de la categoría
+              descripcion:
+                type: string
+                maxLength: 50
+                example: Categoría para niños
+                description: Descripción de la categoría
+    responses:
+      201:
+        description: Categoría creada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Categoría creada correctamente
+                data:
+                  $ref: '#/components/schemas/Categoria'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/categorias/{id}:
+  get:
+    summary: Obtener una categoría por ID
+    tags: [Categorías]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la categoría
+    responses:
+      200:
+        description: Categoría obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Categoría obtenida correctamente
+                data:
+                  $ref: '#/components/schemas/Categoria'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar una categoría existente
+    tags: [Categorías]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la categoría
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              categoria:
+                type: string
+                maxLength: 20
+                example: Juvenil
+                description: Nombre de la categoría
+              descripcion:
+                type: string
+                maxLength: 50
+                example: Categoría para jóvenes
+                description: Descripción de la categoría
+    responses:
+      200:
+        description: Categoría actualizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Categoría actualizada correctamente
+                data:
+                  $ref: '#/components/schemas/Categoria'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar una categoría
+    tags: [Categorías]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la categoría
+    responses:
+      200:
+        description: Categoría eliminada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Categoría eliminada correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Categoría eliminada correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

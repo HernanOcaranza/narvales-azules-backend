@@ -1,0 +1,22 @@
+/health:
+  get:
+    summary: Verificar el estado del servidor
+    tags: [Health]
+    responses:
+      200:
+        description: Servidor funcionando correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: OK
+                message:
+                  type: string
+                  example: Servidor funcionando correctamente
+                timestamp:
+                  type: string
+                  format: date-time
+

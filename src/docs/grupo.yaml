@@ -1,0 +1,288 @@
+/api/grupos:
+  get:
+    summary: Obtener todos los grupos
+    tags: [Grupos]
+    responses:
+      200:
+        description: Lista de grupos obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Grupo'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo grupo
+    tags: [Grupos]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - nombre
+              - cupo_maximo
+              - id_disciplina
+              - id_categoria
+            properties:
+              nombre:
+                type: string
+                maxLength: 40
+                example: Grupo A - Natación Infantil
+                description: Nombre del grupo
+              cupo_maximo:
+                type: integer
+                minimum: 1
+                example: 20
+                description: Cupo máximo de alumnos
+              estado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del grupo (1 activo, 0 inactivo)
+              id_disciplina:
+                type: integer
+                example: 1
+                description: ID de la disciplina
+              id_categoria:
+                type: integer
+                example: 1
+                description: ID de la categoría
+    responses:
+      201:
+        description: Grupo creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupo creado correctamente
+                data:
+                  $ref: '#/components/schemas/Grupo'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupos/{id}:
+  get:
+    summary: Obtener un grupo por ID
+    tags: [Grupos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del grupo
+    responses:
+      200:
+        description: Grupo obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupo obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/Grupo'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un grupo existente
+    tags: [Grupos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del grupo
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              nombre:
+                type: string
+                maxLength: 40
+                example: Grupo B - Natación Juvenil
+                description: Nombre del grupo
+              cupo_maximo:
+                type: integer
+                minimum: 1
+                example: 25
+                description: Cupo máximo de alumnos
+              estado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del grupo (1 activo, 0 inactivo)
+              id_disciplina:
+                type: integer
+                example: 1
+                description: ID de la disciplina
+              id_categoria:
+                type: integer
+                example: 2
+                description: ID de la categoría
+    responses:
+      200:
+        description: Grupo actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupo actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/Grupo'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un grupo
+    tags: [Grupos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del grupo
+    responses:
+      200:
+        description: Grupo eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupo eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Grupo eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupos/disciplina/{id_disciplina}:
+  get:
+    summary: Obtener grupos por disciplina
+    tags: [Grupos]
+    parameters:
+      - in: path
+        name: id_disciplina
+        required: true
+        schema:
+          type: integer
+        description: ID de la disciplina
+    responses:
+      200:
+        description: Grupos obtenidos correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Grupo'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupos/categoria/{id_categoria}:
+  get:
+    summary: Obtener grupos por categoría
+    tags: [Grupos]
+    parameters:
+      - in: path
+        name: id_categoria
+        required: true
+        schema:
+          type: integer
+        description: ID de la categoría
+    responses:
+      200:
+        description: Grupos obtenidos correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Grupos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Grupo'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
