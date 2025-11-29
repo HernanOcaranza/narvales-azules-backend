@@ -3,12 +3,20 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import env from './config/env.js';
 import swaggerSpec from './config/swagger.js';
+import authMiddleware from './middlewares/auth.middleware.js';
 
 // Importar rutas
+import authRoutes from './routes/auth.routes.js';
 import categoriaRoutes from './routes/categoria.routes.js';
+import condicionRoutes from './routes/condicion.routes.js';
 import disciplinaRoutes from './routes/disciplina.routes.js';
 import empleadoRoutes from './routes/empleado.routes.js';
 import grupoRoutes from './routes/grupo.routes.js';
+import grupoHorarioRoutes from './routes/grupo_horario.routes.js';
+import tutorRoutes from './routes/tutor.routes.js';
+import alumnoRoutes from './routes/alumno.routes.js';
+import claseRoutes from './routes/clase.routes.js';
+import claseEmpleadoRoutes from './routes/clase_empleado.routes.js';
 
 const app = express();
 
@@ -26,11 +34,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Narvales Azules API Documentation'
 }));
 
-// Rutas
-app.use('/api/categorias', categoriaRoutes);
-app.use('/api/disciplinas', disciplinaRoutes);
-app.use('/api/empleados', empleadoRoutes);
-app.use('/api/grupos', grupoRoutes);
+// Rutas públicas (sin autenticación)
+app.use('/api/auth', authRoutes);
 
 // Health check - Documentación en src/docs/health.yaml
 app.get('/health', (req, res) => {
@@ -40,6 +45,18 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Rutas protegidas (requieren autenticación JWT)
+app.use('/api/categorias', authMiddleware, categoriaRoutes);
+app.use('/api/condiciones', authMiddleware, condicionRoutes);
+app.use('/api/disciplinas', authMiddleware, disciplinaRoutes);
+app.use('/api/empleados', authMiddleware, empleadoRoutes);
+app.use('/api/grupos', authMiddleware, grupoRoutes);
+app.use('/api/grupo-horarios', authMiddleware, grupoHorarioRoutes);
+app.use('/api/tutores', authMiddleware, tutorRoutes);
+app.use('/api/alumnos', authMiddleware, alumnoRoutes);
+app.use('/api/clases', authMiddleware, claseRoutes);
+app.use('/api/clase-empleados', authMiddleware, claseEmpleadoRoutes);
 
 // Ruta 404
 app.use((req, res) => {

@@ -1,6 +1,7 @@
 import app from './app.js';
 import env from './config/env.js';
 import { testConnection, sequelize } from './config/database.js';
+import schedulerService from './services/scheduler.service.js';
 
 const startServer = async () => {
   try {
@@ -23,6 +24,9 @@ const startServer = async () => {
     app.listen(env.PORT, () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${env.PORT}`);
       console.log(`📝 Entorno: ${env.NODE_ENV}`);
+      
+      // Iniciar tareas programadas
+      schedulerService.iniciar();
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);
@@ -33,12 +37,14 @@ const startServer = async () => {
 // Manejar cierre graceful
 process.on('SIGTERM', async () => {
   console.log('SIGTERM recibido. Cerrando servidor...');
+  schedulerService.detener();
   await sequelize.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT recibido. Cerrando servidor...');
+  schedulerService.detener();
   await sequelize.close();
   process.exit(0);
 });

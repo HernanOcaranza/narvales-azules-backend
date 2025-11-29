@@ -1,0 +1,198 @@
+/api/condiciones:
+  get:
+    summary: Obtener todas las condiciones
+    tags: [Condiciones]
+    responses:
+      200:
+        description: Lista de condiciones obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Condiciones obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Condicion'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear una nueva condición
+    tags: [Condiciones]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - condicion
+              - atencion
+            properties:
+              condicion:
+                type: string
+                maxLength: 50
+                example: Discapacidad motriz
+                description: Nombre de la condición
+              atencion:
+                type: integer
+                example: 1
+                description: Nivel de atención requerido
+              descripcion:
+                type: string
+                maxLength: 100
+                example: Requiere atención especial en movilidad
+                description: Descripción de la condición
+    responses:
+      201:
+        description: Condición creada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Condición creada correctamente
+                data:
+                  $ref: '#/components/schemas/Condicion'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/condiciones/{id}:
+  get:
+    summary: Obtener una condición por ID
+    tags: [Condiciones]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la condición
+    responses:
+      200:
+        description: Condición obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Condición obtenida correctamente
+                data:
+                  $ref: '#/components/schemas/Condicion'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar una condición existente
+    tags: [Condiciones]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la condición
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              condicion:
+                type: string
+                maxLength: 50
+                example: Discapacidad visual
+                description: Nombre de la condición
+              atencion:
+                type: integer
+                example: 2
+                description: Nivel de atención requerido
+              descripcion:
+                type: string
+                maxLength: 100
+                example: Requiere atención especial en visión
+                description: Descripción de la condición
+    responses:
+      200:
+        description: Condición actualizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Condición actualizada correctamente
+                data:
+                  $ref: '#/components/schemas/Condicion'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar una condición
+    tags: [Condiciones]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la condición
+    responses:
+      200:
+        description: Condición eliminada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Condición eliminada correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Condición eliminada correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

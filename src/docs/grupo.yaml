@@ -62,6 +62,51 @@
                 type: integer
                 example: 1
                 description: ID de la categoría
+              horarios:
+                type: array
+                description: Array opcional de horarios del grupo. Si se proporciona, se crearán automáticamente las clases del mes actual.
+                items:
+                  type: object
+                  required:
+                    - dia_semana
+                    - hora_inicio
+                    - hora_fin
+                  properties:
+                    dia_semana:
+                      type: integer
+                      minimum: 0
+                      maximum: 6
+                      example: 1
+                      description: Día de la semana (0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado)
+                    hora_inicio:
+                      type: string
+                      format: time
+                      example: "10:00:00"
+                      description: Hora de inicio de la clase (formato HH:MM:SS)
+                    hora_fin:
+                      type: string
+                      format: time
+                      example: "11:00:00"
+                      description: Hora de fin de la clase (formato HH:MM:SS)
+                    activo:
+                      type: integer
+                      minimum: 0
+                      maximum: 1
+                      example: 1
+                      description: Estado del horario (1 activo, 0 inactivo). Por defecto 1.
+                example:
+                  - dia_semana: 1
+                    hora_inicio: "10:00:00"
+                    hora_fin: "11:00:00"
+                    activo: 1
+                  - dia_semana: 3
+                    hora_inicio: "10:00:00"
+                    hora_fin: "11:00:00"
+                    activo: 1
+                  - dia_semana: 5
+                    hora_inicio: "10:00:00"
+                    hora_fin: "11:00:00"
+                    activo: 1
     responses:
       201:
         description: Grupo creado correctamente

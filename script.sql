@@ -30,6 +30,13 @@ CREATE TABLE Categoria(
     descripcion VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE Condicion(
+    id_condicion INT AUTO_INCREMENT PRIMARY KEY,
+    condicion VARCHAR(50) NOT NULL,
+    atencion INT NOT NULL,
+    descripcion VARCHAR(100)
+) ENGINE=InnoDB;
+
 CREATE TABLE Disciplina(
     id_disciplina INT AUTO_INCREMENT PRIMARY KEY,
     disciplina VARCHAR(20) NOT NULL
@@ -66,8 +73,10 @@ CREATE TABLE Alumno(
     estado TINYINT(1) NOT NULL DEFAULT 1,
     id_tutor INT NOT NULL,
     id_categoria INT NOT NULL,
+    id_condicion INT NOT NULL,
     FOREIGN KEY (id_tutor) REFERENCES Tutor(id_tutor),
-    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
+    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria),
+    FOREIGN KEY (id_condicion) REFERENCES Condicion(id_condicion)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Clase(
@@ -76,6 +85,7 @@ CREATE TABLE Clase(
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
     id_grupo INT NOT NULL,
+    estado ENUM('pendiente', 'realizada', 'suspendida') NOT NULL DEFAULT 'pendiente',
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
 ) ENGINE=InnoDB;
 

@@ -1,0 +1,332 @@
+/api/grupo-horarios:
+  get:
+    summary: Obtener todos los horarios de grupos
+    tags: [Grupo Horarios]
+    responses:
+      200:
+        description: Lista de horarios obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horarios obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GrupoHorario'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo horario para un grupo
+    tags: [Grupo Horarios]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id_grupo
+              - dia_semana
+              - hora_inicio
+              - hora_fin
+            properties:
+              id_grupo:
+                type: integer
+                example: 1
+                description: ID del grupo
+              dia_semana:
+                type: integer
+                minimum: 0
+                maximum: 6
+                example: 1
+                description: Día de la semana (0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado)
+              hora_inicio:
+                type: string
+                format: time
+                example: "10:00:00"
+                description: Hora de inicio de la clase (formato HH:MM:SS o HH:MM)
+              hora_fin:
+                type: string
+                format: time
+                example: "11:00:00"
+                description: Hora de fin de la clase (formato HH:MM:SS o HH:MM)
+              activo:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del horario (1 activo, 0 inactivo). Por defecto 1.
+    responses:
+      201:
+        description: Horario creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horario creado correctamente
+                data:
+                  $ref: '#/components/schemas/GrupoHorario'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupo-horarios/multiple:
+  post:
+    summary: Crear múltiples horarios para grupos
+    tags: [Grupo Horarios]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - horarios
+            properties:
+              horarios:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  required:
+                    - id_grupo
+                    - dia_semana
+                    - hora_inicio
+                    - hora_fin
+                  properties:
+                    id_grupo:
+                      type: integer
+                      example: 1
+                    dia_semana:
+                      type: integer
+                      minimum: 0
+                      maximum: 6
+                      example: 1
+                    hora_inicio:
+                      type: string
+                      format: time
+                      example: "10:00:00"
+                    hora_fin:
+                      type: string
+                      format: time
+                      example: "11:00:00"
+                    activo:
+                      type: integer
+                      minimum: 0
+                      maximum: 1
+                      example: 1
+            example:
+              horarios:
+                - id_grupo: 1
+                  dia_semana: 1
+                  hora_inicio: "10:00:00"
+                  hora_fin: "11:00:00"
+                  activo: 1
+                - id_grupo: 1
+                  dia_semana: 3
+                  hora_inicio: "10:00:00"
+                  hora_fin: "11:00:00"
+                  activo: 1
+    responses:
+      201:
+        description: Horarios creados correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horarios creados correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GrupoHorario'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupo-horarios/{id}:
+  get:
+    summary: Obtener un horario por ID
+    tags: [Grupo Horarios]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del horario
+    responses:
+      200:
+        description: Horario obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horario obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/GrupoHorario'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un horario existente
+    tags: [Grupo Horarios]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del horario
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              dia_semana:
+                type: integer
+                minimum: 0
+                maximum: 6
+                example: 2
+                description: Día de la semana (0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado)
+              hora_inicio:
+                type: string
+                format: time
+                example: "11:00:00"
+                description: Hora de inicio de la clase (formato HH:MM:SS o HH:MM)
+              hora_fin:
+                type: string
+                format: time
+                example: "12:00:00"
+                description: Hora de fin de la clase (formato HH:MM:SS o HH:MM)
+              activo:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del horario (1 activo, 0 inactivo)
+    responses:
+      200:
+        description: Horario actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horario actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/GrupoHorario'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un horario
+    tags: [Grupo Horarios]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del horario
+    responses:
+      200:
+        description: Horario eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horario eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Horario eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/grupo-horarios/grupo/{id_grupo}:
+  get:
+    summary: Obtener todos los horarios de un grupo específico
+    tags: [Grupo Horarios]
+    parameters:
+      - in: path
+        name: id_grupo
+        required: true
+        schema:
+          type: integer
+        description: ID del grupo
+    responses:
+      200:
+        description: Horarios obtenidos correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Horarios obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GrupoHorario'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
