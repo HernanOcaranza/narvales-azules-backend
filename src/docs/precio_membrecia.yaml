@@ -1,0 +1,242 @@
+/api/precio-membresias:
+  get:
+    summary: Obtener todos los precios de membresía
+    tags: [Precio-Membresias]
+    parameters:
+      - in: query
+        name: idTipoMembrecia
+        schema:
+          type: integer
+        description: Filtrar por ID de tipo de membresía
+    responses:
+      200:
+        description: Lista de precios de membresía obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precios de membresía obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PrecioMembrecia'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo precio de membresía
+    tags: [Precio-Membresias]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - fecha_inicio_vigencia
+              - precio
+              - id_tipo_membrecia
+            properties:
+              fecha_inicio_vigencia:
+                type: string
+                format: date
+                example: "2024-01-01"
+                description: Fecha de inicio de vigencia del precio
+              fecha_fin_vigencia:
+                type: string
+                format: date
+                example: "2024-12-31"
+                description: Fecha de fin de vigencia del precio (opcional)
+              precio:
+                type: number
+                format: decimal
+                example: 5000.00
+                description: Precio de la membresía
+              id_tipo_membrecia:
+                type: integer
+                example: 1
+                description: ID del tipo de membresía
+    responses:
+      201:
+        description: Precio de membresía creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precio de membresía creado correctamente
+                data:
+                  $ref: '#/components/schemas/PrecioMembrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/precio-membresias/vigente/{idTipoMembrecia}:
+  get:
+    summary: Obtener precio vigente de un tipo de membresía
+    tags: [Precio-Membresias]
+    parameters:
+      - in: path
+        name: idTipoMembrecia
+        required: true
+        schema:
+          type: integer
+        description: ID del tipo de membresía
+      - in: query
+        name: fecha
+        schema:
+          type: string
+          format: date
+        description: Fecha para consultar el precio vigente (opcional, por defecto fecha actual)
+    responses:
+      200:
+        description: Precio vigente obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precio vigente obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/PrecioMembrecia'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/precio-membresias/{id}:
+  get:
+    summary: Obtener un precio de membresía por ID
+    tags: [Precio-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del precio de membresía
+    responses:
+      200:
+        description: Precio de membresía obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precio de membresía obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/PrecioMembrecia'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un precio de membresía existente
+    tags: [Precio-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del precio de membresía
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fecha_inicio_vigencia:
+                type: string
+                format: date
+                example: "2024-01-01"
+              fecha_fin_vigencia:
+                type: string
+                format: date
+                example: "2024-12-31"
+              precio:
+                type: number
+                format: decimal
+                example: 5000.00
+    responses:
+      200:
+        description: Precio de membresía actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precio de membresía actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/PrecioMembrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un precio de membresía
+    tags: [Precio-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del precio de membresía
+    responses:
+      200:
+        description: Precio de membresía eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Precio de membresía eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Precio de membresía eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

@@ -1,0 +1,183 @@
+/api/tipo-membresias:
+  get:
+    summary: Obtener todos los tipos de membresía
+    tags: [Tipo-Membresias]
+    responses:
+      200:
+        description: Lista de tipos de membresía obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tipos de membresía obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TipoMembrecia'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo tipo de membresía
+    tags: [Tipo-Membresias]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - tipo_membrecia
+            properties:
+              tipo_membrecia:
+                type: string
+                maxLength: 20
+                example: Mensual
+                description: Nombre del tipo de membresía
+              frecuencia_semanal:
+                type: integer
+                minimum: 0
+                example: 2
+                description: Frecuencia semanal de clases
+    responses:
+      201:
+        description: Tipo de membresía creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tipo de membresía creado correctamente
+                data:
+                  $ref: '#/components/schemas/TipoMembrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/tipo-membresias/{id}:
+  get:
+    summary: Obtener un tipo de membresía por ID
+    tags: [Tipo-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tipo de membresía
+    responses:
+      200:
+        description: Tipo de membresía obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tipo de membresía obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/TipoMembrecia'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un tipo de membresía existente
+    tags: [Tipo-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tipo de membresía
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tipo_membrecia:
+                type: string
+                maxLength: 20
+                example: Mensual
+              frecuencia_semanal:
+                type: integer
+                minimum: 0
+                example: 2
+    responses:
+      200:
+        description: Tipo de membresía actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tipo de membresía actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/TipoMembrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un tipo de membresía
+    tags: [Tipo-Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tipo de membresía
+    responses:
+      200:
+        description: Tipo de membresía eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tipo de membresía eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Tipo de membresía eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

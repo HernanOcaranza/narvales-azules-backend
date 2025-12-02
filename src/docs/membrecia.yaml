@@ -1,0 +1,259 @@
+/api/membresias:
+  get:
+    summary: Obtener todas las membresías
+    tags: [Membresias]
+    responses:
+      200:
+        description: Lista de membresías obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresías obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Membrecia'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear una nueva membresía
+    tags: [Membresias]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - fecha_inicio
+              - estado
+              - id_alumno
+              - id_pago
+              - id_tipo_membrecia
+              - id_grupo
+            properties:
+              fecha_inicio:
+                type: string
+                format: date
+                example: "2024-01-01"
+                description: Fecha de inicio de la membresía
+              fecha_fin:
+                type: string
+                format: date
+                example: "2024-01-31"
+                description: Fecha de fin de la membresía (opcional)
+              estado:
+                type: string
+                enum: [activa, vencida, suspendida, cancelada]
+                example: activa
+                description: Estado de la membresía
+              id_alumno:
+                type: integer
+                example: 1
+                description: ID del alumno
+              id_pago:
+                type: integer
+                example: 1
+                description: ID del pago (debe ser tipo ingreso)
+              id_tipo_membrecia:
+                type: integer
+                example: 1
+                description: ID del tipo de membresía
+              id_grupo:
+                type: integer
+                example: 1
+                description: ID del grupo
+    responses:
+      201:
+        description: Membresía creada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresía creada correctamente
+                data:
+                  $ref: '#/components/schemas/Membrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/membresias/alumno/{idAlumno}:
+  get:
+    summary: Obtener membresías de un alumno
+    tags: [Membresias]
+    parameters:
+      - in: path
+        name: idAlumno
+        required: true
+        schema:
+          type: integer
+        description: ID del alumno
+    responses:
+      200:
+        description: Membresías del alumno obtenidas correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresías del alumno obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Membrecia'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/membresias/{id}:
+  get:
+    summary: Obtener una membresía por ID
+    tags: [Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la membresía
+    responses:
+      200:
+        description: Membresía obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresía obtenida correctamente
+                data:
+                  $ref: '#/components/schemas/Membrecia'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar una membresía existente
+    tags: [Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la membresía
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fecha_inicio:
+                type: string
+                format: date
+                example: "2024-01-01"
+              fecha_fin:
+                type: string
+                format: date
+                example: "2024-01-31"
+              estado:
+                type: string
+                enum: [activa, vencida, suspendida, cancelada]
+                example: activa
+              id_alumno:
+                type: integer
+                example: 1
+              id_pago:
+                type: integer
+                example: 1
+              id_tipo_membrecia:
+                type: integer
+                example: 1
+              id_grupo:
+                type: integer
+                example: 1
+    responses:
+      200:
+        description: Membresía actualizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresía actualizada correctamente
+                data:
+                  $ref: '#/components/schemas/Membrecia'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar una membresía
+    tags: [Membresias]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la membresía
+    responses:
+      200:
+        description: Membresía eliminada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Membresía eliminada correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Membresía eliminada correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

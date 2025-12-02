@@ -1,0 +1,217 @@
+/api/pagos:
+  get:
+    summary: Obtener todos los pagos
+    tags: [Pagos]
+    parameters:
+      - in: query
+        name: tipo
+        schema:
+          type: string
+          enum: [ingreso, egreso]
+        description: Filtrar por tipo de pago (ingreso o egreso)
+    responses:
+      200:
+        description: Lista de pagos obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Pagos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Pago'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo pago
+    tags: [Pagos]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - tipo
+              - fecha_pago
+              - estado
+            properties:
+              tipo:
+                type: string
+                enum: [ingreso, egreso]
+                example: ingreso
+                description: Tipo de pago (ingreso o egreso)
+              fecha_pago:
+                type: string
+                format: date
+                example: "2024-01-15"
+                description: Fecha del pago
+              estado:
+                type: string
+                maxLength: 10
+                example: completado
+                description: Estado del pago
+              observaciones:
+                type: string
+                maxLength: 60
+                example: Pago de membresía mensual
+                description: Observaciones del pago
+              id_empleado:
+                type: integer
+                example: 1
+                description: ID del empleado (solo para egresos)
+    responses:
+      201:
+        description: Pago creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Pago creado correctamente
+                data:
+                  $ref: '#/components/schemas/Pago'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/pagos/{id}:
+  get:
+    summary: Obtener un pago por ID
+    tags: [Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del pago
+    responses:
+      200:
+        description: Pago obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Pago obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/Pago'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un pago existente
+    tags: [Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del pago
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tipo:
+                type: string
+                enum: [ingreso, egreso]
+                example: ingreso
+              fecha_pago:
+                type: string
+                format: date
+                example: "2024-01-15"
+              estado:
+                type: string
+                maxLength: 10
+                example: completado
+              observaciones:
+                type: string
+                maxLength: 60
+                example: Pago de membresía mensual
+              id_empleado:
+                type: integer
+                example: 1
+    responses:
+      200:
+        description: Pago actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Pago actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/Pago'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un pago
+    tags: [Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del pago
+    responses:
+      200:
+        description: Pago eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Pago eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Pago eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

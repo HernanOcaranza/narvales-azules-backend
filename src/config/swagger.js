@@ -30,6 +30,11 @@ const tutorDocs = loadYamlFile(path.join(__dirname, '../docs/tutor.yaml'));
 const alumnoDocs = loadYamlFile(path.join(__dirname, '../docs/alumno.yaml'));
 const claseDocs = loadYamlFile(path.join(__dirname, '../docs/clase.yaml'));
 const claseEmpleadoDocs = loadYamlFile(path.join(__dirname, '../docs/clase_empleado.yaml'));
+const pagoDocs = loadYamlFile(path.join(__dirname, '../docs/pago.yaml'));
+const detallePagoDocs = loadYamlFile(path.join(__dirname, '../docs/detalle_pago.yaml'));
+const tipoMembreciaDocs = loadYamlFile(path.join(__dirname, '../docs/tipo_membrecia.yaml'));
+const precioMembreciaDocs = loadYamlFile(path.join(__dirname, '../docs/precio_membrecia.yaml'));
+const membresiaDocs = loadYamlFile(path.join(__dirname, '../docs/membrecia.yaml'));
 const healthDocs = loadYamlFile(path.join(__dirname, '../docs/health.yaml'));
 
 const swaggerSpec = {
@@ -69,6 +74,11 @@ const swaggerSpec = {
     ...alumnoDocs,
     ...claseDocs,
     ...claseEmpleadoDocs,
+    ...pagoDocs,
+    ...detallePagoDocs,
+    ...tipoMembreciaDocs,
+    ...precioMembreciaDocs,
+    ...membresiaDocs,
     ...healthDocs
   },
   components: {
@@ -514,6 +524,223 @@ const swaggerSpec = {
             $ref: '#/components/schemas/Empleado'
           }
         }
+      },
+      Pago: {
+        type: 'object',
+        required: ['tipo', 'fecha_pago', 'estado'],
+        properties: {
+          id_pago: {
+            type: 'integer',
+            example: 1
+          },
+          tipo: {
+            type: 'string',
+            enum: ['ingreso', 'egreso'],
+            example: 'ingreso',
+            description: 'Tipo de pago'
+          },
+          fecha_pago: {
+            type: 'string',
+            format: 'date',
+            example: '2024-01-15',
+            description: 'Fecha del pago'
+          },
+          estado: {
+            type: 'string',
+            maxLength: 10,
+            example: 'completado',
+            description: 'Estado del pago'
+          },
+          observaciones: {
+            type: 'string',
+            maxLength: 60,
+            example: 'Pago de membresía mensual',
+            description: 'Observaciones del pago'
+          },
+          id_empleado: {
+            type: 'integer',
+            nullable: true,
+            example: 1,
+            description: 'ID del empleado (solo para egresos)'
+          },
+          empleado: {
+            $ref: '#/components/schemas/Empleado'
+          },
+          detalles: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/DetallePago'
+            }
+          }
+        }
+      },
+      DetallePago: {
+        type: 'object',
+        required: ['metodo_pago', 'monto_parcial', 'fecha_detalle', 'id_pago'],
+        properties: {
+          id_detalle_pago: {
+            type: 'integer',
+            example: 1
+          },
+          metodo_pago: {
+            type: 'string',
+            maxLength: 20,
+            example: 'efectivo',
+            description: 'Método de pago'
+          },
+          monto_parcial: {
+            type: 'number',
+            format: 'decimal',
+            example: 5000.00,
+            description: 'Monto parcial del pago'
+          },
+          fecha_detalle: {
+            type: 'string',
+            format: 'date',
+            example: '2024-01-15',
+            description: 'Fecha del detalle'
+          },
+          referencia_transferencia: {
+            type: 'string',
+            maxLength: 50,
+            example: 'TRANS001234',
+            description: 'Referencia de transferencia'
+          },
+          id_pago: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del pago asociado'
+          },
+          pago: {
+            $ref: '#/components/schemas/Pago'
+          }
+        }
+      },
+      TipoMembrecia: {
+        type: 'object',
+        required: ['tipo_membrecia'],
+        properties: {
+          id_tipo_membrecia: {
+            type: 'integer',
+            example: 1
+          },
+          tipo_membrecia: {
+            type: 'string',
+            maxLength: 20,
+            example: 'Mensual',
+            description: 'Nombre del tipo de membresía'
+          },
+          frecuencia_semanal: {
+            type: 'integer',
+            minimum: 0,
+            example: 2,
+            description: 'Frecuencia semanal de clases'
+          },
+          precios: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PrecioMembrecia'
+            }
+          }
+        }
+      },
+      PrecioMembrecia: {
+        type: 'object',
+        required: ['fecha_inicio_vigencia', 'precio', 'id_tipo_membrecia'],
+        properties: {
+          id_precio_membrecia: {
+            type: 'integer',
+            example: 1
+          },
+          fecha_inicio_vigencia: {
+            type: 'string',
+            format: 'date',
+            example: '2024-01-01',
+            description: 'Fecha de inicio de vigencia'
+          },
+          fecha_fin_vigencia: {
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            example: '2024-12-31',
+            description: 'Fecha de fin de vigencia'
+          },
+          precio: {
+            type: 'number',
+            format: 'decimal',
+            example: 5000.00,
+            description: 'Precio de la membresía'
+          },
+          id_tipo_membrecia: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del tipo de membresía'
+          },
+          tipo_membrecia: {
+            $ref: '#/components/schemas/TipoMembrecia'
+          }
+        }
+      },
+      Membrecia: {
+        type: 'object',
+        required: ['fecha_inicio', 'estado', 'id_alumno', 'id_pago', 'id_tipo_membrecia', 'id_grupo'],
+        properties: {
+          id_membrecia: {
+            type: 'integer',
+            example: 1
+          },
+          fecha_inicio: {
+            type: 'string',
+            format: 'date',
+            example: '2024-01-01',
+            description: 'Fecha de inicio de la membresía'
+          },
+          fecha_fin: {
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            example: '2024-01-31',
+            description: 'Fecha de fin de la membresía'
+          },
+          estado: {
+            type: 'string',
+            enum: ['activa', 'vencida', 'suspendida', 'cancelada'],
+            example: 'activa',
+            description: 'Estado de la membresía'
+          },
+          id_alumno: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del alumno'
+          },
+          id_pago: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del pago asociado'
+          },
+          id_tipo_membrecia: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del tipo de membresía'
+          },
+          id_grupo: {
+            type: 'integer',
+            example: 1,
+            description: 'ID del grupo'
+          },
+          alumno: {
+            $ref: '#/components/schemas/Alumno'
+          },
+          pago: {
+            $ref: '#/components/schemas/Pago'
+          },
+          tipo_membrecia: {
+            $ref: '#/components/schemas/TipoMembrecia'
+          },
+          grupo: {
+            $ref: '#/components/schemas/Grupo'
+          }
+        }
       }
     },
     responses: {
@@ -628,6 +855,26 @@ const swaggerSpec = {
     {
       name: 'Clase-Empleados',
       description: 'Endpoints para gestionar relaciones clase-empleado'
+    },
+    {
+      name: 'Pagos',
+      description: 'Endpoints para gestionar pagos'
+    },
+    {
+      name: 'Detalle-Pagos',
+      description: 'Endpoints para gestionar detalles de pago'
+    },
+    {
+      name: 'Tipo-Membresias',
+      description: 'Endpoints para gestionar tipos de membresía'
+    },
+    {
+      name: 'Precio-Membresias',
+      description: 'Endpoints para gestionar precios de membresía'
+    },
+    {
+      name: 'Membresias',
+      description: 'Endpoints para gestionar membresías'
     },
     {
       name: 'Health',

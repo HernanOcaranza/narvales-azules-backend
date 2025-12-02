@@ -12,6 +12,11 @@ import Tutor from './Tutor.js';
 import Alumno from './Alumno.js';
 import Clase from './Clase.js';
 import ClaseEmpleado from './Clase_Empleado.js';
+import Pago from './Pago.js';
+import Detalle_Pago from './Detalle_Pago.js';
+import Tipo_Membrecia from './Tipo_Membrecia.js';
+import Precio_Membrecia from './Precio_Membrecia.js';
+import Membrecia from './Membrecia.js';
 
 // Inicializar relaciones
 Categoria.hasMany(Grupo, { foreignKey: 'id_categoria', as: 'grupos' });
@@ -51,6 +56,26 @@ Empleado.belongsToMany(Clase, {
 ClaseEmpleado.belongsTo(Clase, { foreignKey: 'id_clase', as: 'clase' });
 ClaseEmpleado.belongsTo(Empleado, { foreignKey: 'id_empleado', as: 'empleado' });
 
+// Relaciones de Pago
+Empleado.hasMany(Pago, { foreignKey: 'id_empleado', as: 'pagos' });
+Pago.belongsTo(Empleado, { foreignKey: 'id_empleado', as: 'empleado' });
+Pago.hasMany(Detalle_Pago, { foreignKey: 'id_pago', as: 'detalles' });
+Detalle_Pago.belongsTo(Pago, { foreignKey: 'id_pago', as: 'pago' });
+Pago.hasOne(Membrecia, { foreignKey: 'id_pago', as: 'membresia' });
+Membrecia.belongsTo(Pago, { foreignKey: 'id_pago', as: 'pago' });
+
+// Relaciones de Tipo_Membrecia y Precio_Membrecia
+Tipo_Membrecia.hasMany(Precio_Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'precios' });
+Precio_Membrecia.belongsTo(Tipo_Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'tipo_membrecia' });
+
+// Relaciones de Membrecia
+Alumno.hasMany(Membrecia, { foreignKey: 'id_alumno', as: 'membresias' });
+Membrecia.belongsTo(Alumno, { foreignKey: 'id_alumno', as: 'alumno' });
+Tipo_Membrecia.hasMany(Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'membresias' });
+Membrecia.belongsTo(Tipo_Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'tipo_membrecia' });
+Grupo.hasMany(Membrecia, { foreignKey: 'id_grupo', as: 'membresias' });
+Membrecia.belongsTo(Grupo, { foreignKey: 'id_grupo', as: 'grupo' });
+
 const db = {
   sequelize,
   Sequelize,
@@ -65,6 +90,11 @@ const db = {
   Alumno,
   Clase,
   ClaseEmpleado,
+  Pago,
+  Detalle_Pago,
+  Tipo_Membrecia,
+  Precio_Membrecia,
+  Membrecia,
 };
 
 export default db;

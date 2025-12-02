@@ -17,6 +17,11 @@ import tutorRoutes from './routes/tutor.routes.js';
 import alumnoRoutes from './routes/alumno.routes.js';
 import claseRoutes from './routes/clase.routes.js';
 import claseEmpleadoRoutes from './routes/clase_empleado.routes.js';
+import pagoRoutes from './routes/pago.routes.js';
+import detallePagoRoutes from './routes/detalle_pago.routes.js';
+import tipoMembreciaRoutes from './routes/tipo_membrecia.routes.js';
+import precioMembreciaRoutes from './routes/precio_membrecia.routes.js';
+import membresiaRoutes from './routes/membrecia.routes.js';
 
 const app = express();
 
@@ -57,6 +62,11 @@ app.use('/api/tutores', authMiddleware, tutorRoutes);
 app.use('/api/alumnos', authMiddleware, alumnoRoutes);
 app.use('/api/clases', authMiddleware, claseRoutes);
 app.use('/api/clase-empleados', authMiddleware, claseEmpleadoRoutes);
+app.use('/api/pagos', authMiddleware, pagoRoutes);
+app.use('/api/detalle-pagos', authMiddleware, detallePagoRoutes);
+app.use('/api/tipo-membresias', authMiddleware, tipoMembreciaRoutes);
+app.use('/api/precio-membresias', authMiddleware, precioMembreciaRoutes);
+app.use('/api/membresias', authMiddleware, membresiaRoutes);
 
 // Ruta 404
 app.use((req, res) => {
