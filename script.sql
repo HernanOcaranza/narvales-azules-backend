@@ -87,6 +87,8 @@ CREATE TABLE Alumno(
     direccion VARCHAR(80),
     fecha_registro DATE NOT NULL,
     estado TINYINT(1) NOT NULL DEFAULT 1,
+    certificado TINYINT(1) NOT NULL DEFAULT 0,
+    url_certificado_medico VARCHAR(255),
     id_tutor INT NOT NULL,
     id_categoria INT NOT NULL,
     id_condicion INT NOT NULL,

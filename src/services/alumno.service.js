@@ -123,6 +123,11 @@ class AlumnoService {
         throw new Error('El campo estado debe ser 0 o 1');
       }
 
+      // Validar certificado si se proporciona
+      if (data.certificado !== undefined && data.certificado !== 0 && data.certificado !== 1) {
+        throw new Error('El campo certificado debe ser 0 o 1');
+      }
+
       return await alumnoRepository.create(data);
     } catch (error) {
       throw new Error(`Error al crear alumno: ${error.message}`);
@@ -208,6 +213,11 @@ class AlumnoService {
       // Validar estado si se proporciona
       if (data.estado !== undefined && data.estado !== 0 && data.estado !== 1) {
         throw new Error('El campo estado debe ser 0 o 1');
+      }
+
+      // Validar certificado si se proporciona
+      if (data.certificado !== undefined && data.certificado !== 0 && data.certificado !== 1) {
+        throw new Error('El campo certificado debe ser 0 o 1');
       }
 
       const alumno = await alumnoRepository.update(id, data);

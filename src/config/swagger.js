@@ -422,6 +422,13 @@ const swaggerSpec = {
             example: 1,
             description: 'Estado del alumno (1 activo, 0 inactivo)'
           },
+          certificado: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 1,
+            example: 0,
+            description: 'Certificado médico del alumno (1 tiene certificado, 0 no tiene certificado)'
+          },
           id_tutor: {
             type: 'integer',
             example: 1,

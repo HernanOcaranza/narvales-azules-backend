@@ -50,7 +50,7 @@ class AlumnoController {
       return successResponse(res, alumno, 'Alumno creado correctamente', 201);
     } catch (error) {
       const statusCode = error.message.includes('ya existe') ? 409 : 
-                        error.message.includes('obligatorio') || error.message.includes('exceder') || error.message.includes('formato') || error.message.includes('mayor') || error.message.includes('debe ser') ? 400 : 500;
+                        error.message.includes('obligatorio') || error.message.includes('exceder') || error.message.includes('formato') || error.message.includes('mayor') || error.message.includes('debe ser') || error.message.includes('certificado') ? 400 : 500;
       return errorResponse(res, error.message, statusCode);
     }
   }
@@ -63,7 +63,7 @@ class AlumnoController {
     } catch (error) {
       const statusCode = error.message.includes('no encontrado') ? 404 : 
                         error.message.includes('ya existe') ? 409 :
-                        error.message.includes('exceder') || error.message.includes('formato') || error.message.includes('mayor') || error.message.includes('debe ser') ? 400 : 500;
+                        error.message.includes('exceder') || error.message.includes('formato') || error.message.includes('mayor') || error.message.includes('debe ser') || error.message.includes('certificado') ? 400 : 500;
       return errorResponse(res, error.message, statusCode);
     }
   }

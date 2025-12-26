@@ -37,6 +37,11 @@ const Alumno = sequelize.define('Alumno', {
     allowNull: false,
     defaultValue: 1
   },
+  certificado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 0
+  },
   id_tutor: {
     type: DataTypes.INTEGER,
     allowNull: false,
