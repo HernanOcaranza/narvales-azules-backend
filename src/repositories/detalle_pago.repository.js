@@ -47,20 +47,22 @@ class DetallePagoRepository {
     return await Detalle_Pago.create(data, options);
   }
 
-  async update(id, data) {
-    const detalle = await Detalle_Pago.findByPk(id);
+  async update(id, data, transaction = null) {
+    const options = transaction ? { transaction } : {};
+    const detalle = await Detalle_Pago.findByPk(id, options);
     if (!detalle) {
       return null;
     }
-    return await detalle.update(data);
+    return await detalle.update(data, options);
   }
 
-  async delete(id) {
-    const detalle = await Detalle_Pago.findByPk(id);
+  async delete(id, transaction = null) {
+    const options = transaction ? { transaction } : {};
+    const detalle = await Detalle_Pago.findByPk(id, options);
     if (!detalle) {
       return false;
     }
-    await detalle.destroy();
+    await detalle.destroy(options);
     return true;
   }
 }

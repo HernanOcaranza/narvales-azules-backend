@@ -4,10 +4,24 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class MembreciaController {
   async getAll(req, res) {
     try {
-      const membresias = await membresiaService.getAllMembresias();
+      // Extraer filtros de los query parameters
+      const filtros = {
+        idAlumno: req.query.idAlumno,
+        estado: req.query.estado,
+        idTipoMembrecia: req.query.idTipoMembrecia,
+        idGrupo: req.query.idGrupo,
+        fechaDesde: req.query.fechaDesde,
+        fechaHasta: req.query.fechaHasta
+      };
+
+      const membresias = await membresiaService.getAllMembresias(filtros);
       return successResponse(res, membresias, 'Membresías obtenidas correctamente');
     } catch (error) {
-      return errorResponse(res, error.message, 500);
+      // Determinar código de estado según el tipo de error
+      const statusCode = error.message.includes('debe ser') || 
+                        error.message.includes('formato') ||
+                        error.message.includes('mayor que') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
     }
   }
 
@@ -36,13 +50,22 @@ class MembreciaController {
 
   async create(req, res) {
     try {
-      // Si viene con datos de pago (sin id_pago), usar el método con transacciones
       // Si viene con id_pago, usar el método tradicional (compatibilidad hacia atrás)
+      // Si no viene con id_pago, usar el método con transacciones (crea pago automáticamente)
       let membresia;
-      if (req.body.pago && !req.body.id_pago) {
-        membresia = await membresiaService.createMembreciaConPago(req.body);
-      } else {
+      if (req.body.id_pago) {
         membresia = await membresiaService.createMembrecia(req.body);
+      } else {
+        // Si no viene objeto pago, crear uno vacío automáticamente
+        const dataConPago = {
+          ...req.body,
+          pago: req.body.pago || {
+            estado: 'pendiente',
+            fecha_pago: req.body.fecha_inicio || new Date().toISOString().split('T')[0],
+            detalles: []
+          }
+        };
+        membresia = await membresiaService.createMembreciaConPago(dataConPago);
       }
       return successResponse(res, membresia, 'Membresía creada correctamente', 201);
     } catch (error) {
@@ -75,6 +98,17 @@ class MembreciaController {
       const { id } = req.params;
       const result = await membresiaService.deleteMembrecia(id);
       return successResponse(res, result, 'Membresía eliminada correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrada') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async getCompletoById(req, res) {
+    try {
+      const { id } = req.params;
+      const membresia = await membresiaService.getMembreciaCompletaById(id);
+      return successResponse(res, membresia, 'Información completa de la membresía obtenida correctamente');
     } catch (error) {
       const statusCode = error.message.includes('no encontrada') ? 404 : 500;
       return errorResponse(res, error.message, statusCode);

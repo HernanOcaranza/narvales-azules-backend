@@ -78,6 +78,17 @@ class AlumnoController {
       return errorResponse(res, error.message, statusCode);
     }
   }
+
+  async getCompletoById(req, res) {
+    try {
+      const { id } = req.params;
+      const alumno = await alumnoService.getAlumnoCompletoById(id);
+      return successResponse(res, alumno, 'Información completa del alumno obtenida correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
 }
 
 export default new AlumnoController();

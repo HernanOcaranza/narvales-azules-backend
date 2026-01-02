@@ -67,20 +67,22 @@ class PagoRepository {
     return await Pago.create(data, options);
   }
 
-  async update(id, data) {
-    const pago = await Pago.findByPk(id);
+  async update(id, data, transaction = null) {
+    const options = transaction ? { transaction } : {};
+    const pago = await Pago.findByPk(id, options);
     if (!pago) {
       return null;
     }
-    return await pago.update(data);
+    return await pago.update(data, options);
   }
 
-  async delete(id) {
-    const pago = await Pago.findByPk(id);
+  async delete(id, transaction = null) {
+    const options = transaction ? { transaction } : {};
+    const pago = await Pago.findByPk(id, options);
     if (!pago) {
       return false;
     }
-    await pago.destroy();
+    await pago.destroy(options);
     return true;
   }
 }

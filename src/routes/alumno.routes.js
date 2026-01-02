@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/search', alumnoController.searchByNombre.bind(alumnoController));
 router.get('/', alumnoController.getAll.bind(alumnoController));
 router.get('/tutor/:idTutor', alumnoController.getByTutor.bind(alumnoController));
+router.get('/:id/completo', alumnoController.getCompletoById.bind(alumnoController));
 router.get('/:id', alumnoController.getById.bind(alumnoController));
 router.post('/', alumnoController.create.bind(alumnoController));
 router.put('/:id', alumnoController.update.bind(alumnoController));

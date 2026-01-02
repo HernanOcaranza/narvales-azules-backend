@@ -241,6 +241,18 @@ class AlumnoService {
       throw new Error(`Error al eliminar alumno: ${error.message}`);
     }
   }
+
+  async getAlumnoCompletoById(id) {
+    try {
+      const alumno = await alumnoRepository.findByIdWithAllDetails(id);
+      if (!alumno) {
+        throw new Error('Alumno no encontrado');
+      }
+      return alumno;
+    } catch (error) {
+      throw new Error(`Error al obtener alumno completo: ${error.message}`);
+    }
+  }
 }
 
 export default new AlumnoService();
