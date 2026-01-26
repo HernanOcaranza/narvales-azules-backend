@@ -1,0 +1,73 @@
+import pagoService from '../services/pago.service.js';
+import { successResponse, errorResponse } from '../utils/response.js';
+
+class PagoController {
+  async getAll(req, res) {
+    try {
+      const { tipo } = req.query;
+      let pagos;
+      
+      if (tipo) {
+        pagos = await pagoService.getPagosByTipo(tipo);
+      } else {
+        pagos = await pagoService.getAllPagos();
+      }
+      
+      return successResponse(res, pagos, 'Pagos obtenidos correctamente');
+    } catch (error) {
+      return errorResponse(res, error.message, 500);
+    }
+  }
+
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+      const pago = await pagoService.getPagoById(id);
+      return successResponse(res, pago, 'Pago obtenido correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async create(req, res) {
+    try {
+      const pago = await pagoService.createPago(req.body);
+      return successResponse(res, pago, 'Pago creado correctamente', 201);
+    } catch (error) {
+      const statusCode = error.message.includes('obligatorio') || 
+                        error.message.includes('debe ser') || 
+                        error.message.includes('exceder') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const pago = await pagoService.updatePago(id, req.body);
+      return successResponse(res, pago, 'Pago actualizado correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') ? 404 : 
+                        error.message.includes('debe ser') || 
+                        error.message.includes('exceder') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await pagoService.deletePago(id);
+      return successResponse(res, result, 'Pago eliminado correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') ? 404 : 
+                        error.message.includes('asociados') || 
+                        error.message.includes('asociado') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+}
+
+export default new PagoController();
+

@@ -1,0 +1,83 @@
+/api/auth/login:
+  post:
+    summary: Iniciar sesión y obtener token JWT
+    tags: [Autenticación]
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - usuario
+              - contrasenia
+            properties:
+              usuario:
+                type: string
+                example: 'jperez'
+                description: Nombre de usuario
+              contrasenia:
+                type: string
+                format: password
+                example: 'password123'
+                description: Contraseña del usuario
+    responses:
+      200:
+        description: Login exitoso
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Login exitoso
+                data:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                      description: Token JWT para autenticación
+                    empleado:
+                      type: object
+                      properties:
+                        id_empleado:
+                          type: integer
+                          example: 1
+                        nombre:
+                          type: string
+                          example: 'Juan'
+                        apellido:
+                          type: string
+                          example: 'Pérez'
+                        tipo:
+                          type: string
+                          example: 'Administrador'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      401:
+        description: Credenciales inválidas
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              success: false
+              message: Credenciales inválidas
+      403:
+        description: Usuario inactivo
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              success: false
+              message: Usuario inactivo
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

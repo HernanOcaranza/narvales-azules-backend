@@ -30,6 +30,13 @@ CREATE TABLE Categoria(
     descripcion VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE Condicion(
+    id_condicion INT AUTO_INCREMENT PRIMARY KEY,
+    condicion VARCHAR(50) NOT NULL,
+    atencion INT NOT NULL,
+    descripcion VARCHAR(100)
+) ENGINE=InnoDB;
+
 CREATE TABLE Disciplina(
     id_disciplina INT AUTO_INCREMENT PRIMARY KEY,
     disciplina VARCHAR(20) NOT NULL
@@ -45,6 +52,22 @@ CREATE TABLE Grupo(
     FOREIGN KEY (id_disciplina) REFERENCES Disciplina(id_disciplina),
     FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
 ) ENGINE=InnoDB;
+
+CREATE TABLE Grupo_Horario(
+    id_grupo_horario INT AUTO_INCREMENT PRIMARY KEY,
+    id_grupo INT NOT NULL,
+    dia_semana TINYINT NOT NULL COMMENT '0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado',
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=Activo, 0=Inactivo',
+    FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo) ON DELETE CASCADE,
+    UNIQUE KEY unique_grupo_dia_hora (id_grupo, dia_semana, hora_inicio),
+    CHECK (dia_semana BETWEEN 0 AND 6),
+    CHECK (hora_fin > hora_inicio)
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_grupo_horario_grupo ON Grupo_Horario(id_grupo);
+CREATE INDEX idx_grupo_horario_dia ON Grupo_Horario(dia_semana);
 
 CREATE TABLE Tutor(
     id_tutor INT AUTO_INCREMENT PRIMARY KEY,
@@ -64,10 +87,14 @@ CREATE TABLE Alumno(
     direccion VARCHAR(80),
     fecha_registro DATE NOT NULL,
     estado TINYINT(1) NOT NULL DEFAULT 1,
+    certificado TINYINT(1) NOT NULL DEFAULT 0,
+    url_certificado_medico VARCHAR(255),
     id_tutor INT NOT NULL,
     id_categoria INT NOT NULL,
+    id_condicion INT NOT NULL,
     FOREIGN KEY (id_tutor) REFERENCES Tutor(id_tutor),
-    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
+    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria),
+    FOREIGN KEY (id_condicion) REFERENCES Condicion(id_condicion)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Clase(
@@ -76,6 +103,7 @@ CREATE TABLE Clase(
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
     id_grupo INT NOT NULL,
+    estado ENUM('pendiente', 'realizada', 'suspendida') NOT NULL DEFAULT 'pendiente',
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
 ) ENGINE=InnoDB;
 
@@ -120,7 +148,7 @@ CREATE TABLE Pago(
     fecha_pago DATE NOT NULL,
     estado VARCHAR(10) NOT NULL,
     observaciones VARCHAR(60),
-    id_empleado INT NOT NULL,
+    id_empleado INT NULL, -- NULL para ingresos (relacionados con membresía), NOT NULL para egresos
     FOREIGN KEY (id_empleado) REFERENCES Empleado(id_empleado)
 ) ENGINE=InnoDB;
 
@@ -148,3 +176,13 @@ CREATE TABLE Membrecia(
     FOREIGN KEY (id_tipo_membrecia) REFERENCES Tipo_Membrecia(id_tipo_membrecia),
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
 ) ENGINE=InnoDB;
+
+-- ======================================================
+-- DATOS INICIALES
+-- ======================================================
+
+-- Usuario administrador inicial
+-- Usuario: admin
+-- Contraseña: admin (hasheada con bcrypt)
+INSERT INTO Empleado (tipo, usuario, contrasenia, nombre, apellido, telefono, fecha_alta, estado)
+VALUES ('admin', 'admin', '$2b$10$7TYlVFkNaYT16a4vLDfjMOLt.vmqLw6YJEUmHfwek6aS7H2T0i0M2', 'Admin', 'Sistema', '0000000000', CURDATE(), 1);

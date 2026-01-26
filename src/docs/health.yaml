@@ -2,6 +2,7 @@
   get:
     summary: Verificar el estado del servidor
     tags: [Health]
+    security: []
     responses:
       200:
         description: Servidor funcionando correctamente

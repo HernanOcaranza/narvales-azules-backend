@@ -1,4 +1,6 @@
 import grupoRepository from '../repositories/grupo.repository.js';
+import grupoHorarioService from './grupo_horario.service.js';
+import claseGeneratorService from './clase-generator.service.js';
 import db from '../models/index.js';
 
 const { Disciplina, Categoria } = db;
@@ -85,7 +87,36 @@ class GrupoService {
         throw new Error('Ya existe un grupo con ese nombre');
       }
 
-      return await grupoRepository.create(data);
+      // Extraer horarios del data si vienen
+      const horarios = data.horarios || [];
+      delete data.horarios; // Remover horarios del data para crear el grupo
+
+      // Crear el grupo
+      const grupo = await grupoRepository.create(data);
+
+      // Si se proporcionaron horarios, crearlos
+      if (horarios.length > 0) {
+        const horariosConGrupo = horarios.map(horario => ({
+          ...horario,
+          id_grupo: grupo.id_grupo,
+          activo: horario.activo !== undefined ? horario.activo : 1
+        }));
+
+        await grupoHorarioService.createManyHorarios(horariosConGrupo);
+
+        // Generar clases del mes actual para el grupo recién creado
+        try {
+          await claseGeneratorService.generarClasesMesActual(grupo.id_grupo);
+        } catch (error) {
+          // Si falla la generación de clases, no fallar la creación del grupo
+          // pero registrar el error
+          console.error(`Error al generar clases iniciales para el grupo ${grupo.id_grupo}:`, error.message);
+        }
+      }
+
+      // Obtener el grupo con sus horarios para retornarlo
+      const grupoCompleto = await grupoRepository.findById(grupo.id_grupo);
+      return grupoCompleto;
     } catch (error) {
       throw new Error(`Error al crear grupo: ${error.message}`);
     }

@@ -1,0 +1,256 @@
+/api/tutores/search:
+  get:
+    summary: Buscar tutores por nombre
+    tags: [Tutores]
+    parameters:
+      - in: query
+        name: nombre
+        required: true
+        schema:
+          type: string
+        description: Nombre o apellido del tutor a buscar (búsqueda parcial)
+        example: Juan
+    responses:
+      200:
+        description: Búsqueda de tutores realizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Búsqueda de tutores realizada correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Tutor'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/tutores:
+  get:
+    summary: Obtener todos los tutores
+    tags: [Tutores]
+    responses:
+      200:
+        description: Lista de tutores obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tutores obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Tutor'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo tutor
+    tags: [Tutores]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - nombre
+              - apellido
+              - fecha_registro
+            properties:
+              nombre:
+                type: string
+                maxLength: 50
+                example: Juan
+                description: Nombre del tutor
+              apellido:
+                type: string
+                maxLength: 50
+                example: Pérez
+                description: Apellido del tutor
+              telefono:
+                type: string
+                maxLength: 10
+                example: '1234567890'
+                description: Teléfono del tutor
+              dni:
+                type: string
+                maxLength: 8
+                example: '12345678'
+                description: DNI del tutor
+              fecha_registro:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de registro del tutor
+    responses:
+      201:
+        description: Tutor creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tutor creado correctamente
+                data:
+                  $ref: '#/components/schemas/Tutor'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/tutores/{id}:
+  get:
+    summary: Obtener un tutor por ID
+    tags: [Tutores]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tutor
+    responses:
+      200:
+        description: Tutor obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tutor obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/Tutor'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un tutor existente
+    tags: [Tutores]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tutor
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              nombre:
+                type: string
+                maxLength: 50
+                example: Juan Carlos
+                description: Nombre del tutor
+              apellido:
+                type: string
+                maxLength: 50
+                example: Pérez García
+                description: Apellido del tutor
+              telefono:
+                type: string
+                maxLength: 10
+                example: '1234567890'
+                description: Teléfono del tutor
+              dni:
+                type: string
+                maxLength: 8
+                example: '12345678'
+                description: DNI del tutor
+              fecha_registro:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de registro del tutor
+    responses:
+      200:
+        description: Tutor actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tutor actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/Tutor'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un tutor
+    tags: [Tutores]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del tutor
+    responses:
+      200:
+        description: Tutor eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Tutor eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Tutor eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

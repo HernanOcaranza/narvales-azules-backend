@@ -1,0 +1,242 @@
+/api/detalle-pagos:
+  get:
+    summary: Obtener todos los detalles de pago
+    tags: [Detalle-Pagos]
+    responses:
+      200:
+        description: Lista de detalles de pago obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalles de pago obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DetallePago'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo detalle de pago
+    tags: [Detalle-Pagos]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - metodo_pago
+              - monto_parcial
+              - fecha_detalle
+              - id_pago
+            properties:
+              metodo_pago:
+                type: string
+                maxLength: 20
+                example: efectivo
+                description: Método de pago
+              monto_parcial:
+                type: number
+                format: decimal
+                example: 5000.00
+                description: Monto parcial del pago
+              fecha_detalle:
+                type: string
+                format: date
+                example: "2024-01-15"
+                description: Fecha del detalle
+              referencia_transferencia:
+                type: string
+                maxLength: 50
+                example: TRANS001234
+                description: Referencia de transferencia (opcional)
+              id_pago:
+                type: integer
+                example: 1
+                description: ID del pago asociado
+    responses:
+      201:
+        description: Detalle de pago creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalle de pago creado correctamente
+                data:
+                  $ref: '#/components/schemas/DetallePago'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/detalle-pagos/pago/{idPago}:
+  get:
+    summary: Obtener detalles de pago por ID de pago
+    tags: [Detalle-Pagos]
+    parameters:
+      - in: path
+        name: idPago
+        required: true
+        schema:
+          type: integer
+        description: ID del pago
+    responses:
+      200:
+        description: Detalles de pago obtenidos correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalles de pago obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DetallePago'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/detalle-pagos/{id}:
+  get:
+    summary: Obtener un detalle de pago por ID
+    tags: [Detalle-Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del detalle de pago
+    responses:
+      200:
+        description: Detalle de pago obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalle de pago obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/DetallePago'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un detalle de pago existente
+    tags: [Detalle-Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del detalle de pago
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metodo_pago:
+                type: string
+                maxLength: 20
+                example: transferencia
+              monto_parcial:
+                type: number
+                format: decimal
+                example: 5000.00
+              fecha_detalle:
+                type: string
+                format: date
+                example: "2024-01-15"
+              referencia_transferencia:
+                type: string
+                maxLength: 50
+                example: TRANS001234
+    responses:
+      200:
+        description: Detalle de pago actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalle de pago actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/DetallePago'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un detalle de pago
+    tags: [Detalle-Pagos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del detalle de pago
+    responses:
+      200:
+        description: Detalle de pago eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Detalle de pago eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Detalle de pago eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

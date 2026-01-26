@@ -1,0 +1,483 @@
+/api/clases:
+  get:
+    summary: Obtener todas las clases
+    tags: [Clases]
+    responses:
+      200:
+        description: Lista de clases obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clases obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Clase'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear una nueva clase
+    tags: [Clases]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - fecha_clase
+              - hora_inicio
+              - hora_fin
+              - id_grupo
+            properties:
+              fecha_clase:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de la clase
+              hora_inicio:
+                type: string
+                format: time
+                example: '09:00:00'
+                description: Hora de inicio de la clase (formato HH:MM o HH:MM:SS)
+              hora_fin:
+                type: string
+                format: time
+                example: '10:30:00'
+                description: Hora de fin de la clase (formato HH:MM o HH:MM:SS)
+              id_grupo:
+                type: integer
+                example: 1
+                description: ID del grupo de la clase
+    responses:
+      201:
+        description: Clase creada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clase creada correctamente
+                data:
+                  $ref: '#/components/schemas/Clase'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/generar-todas:
+  post:
+    summary: Generar clases automáticamente para todos los grupos activos
+    description: |
+      Genera clases automáticamente para todos los grupos activos basándose en sus horarios configurados.
+      Por defecto genera las clases del mes actual. Opcionalmente se puede especificar un mes y año específicos.
+      Solo genera clases para grupos que tengan horarios configurados.
+    tags: [Clases]
+    parameters:
+      - in: query
+        name: mes
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 12
+        description: Mes específico (1-12). Si se proporciona, también se debe proporcionar el año.
+        example: 2
+      - in: query
+        name: anio
+        required: false
+        schema:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+        description: Año específico. Si se proporciona, también se debe proporcionar el mes.
+        example: 2024
+    responses:
+      200:
+        description: Clases generadas correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clases generadas correctamente para el mes actual. 45 clases creadas para 3 grupos.
+                data:
+                  type: object
+                  properties:
+                    gruposProcesados:
+                      type: integer
+                      example: 3
+                      description: Número de grupos procesados exitosamente
+                    gruposConError:
+                      type: integer
+                      example: 0
+                      description: Número de grupos que tuvieron errores
+                    totalClasesCreadas:
+                      type: integer
+                      example: 45
+                      description: Total de clases creadas
+                    mes:
+                      type: integer
+                      example: 1
+                      description: Mes para el cual se generaron las clases
+                    anio:
+                      type: integer
+                      example: 2024
+                      description: Año para el cual se generaron las clases
+                    detalles:
+                      type: array
+                      description: Detalle de clases creadas por cada grupo
+                      items:
+                        type: object
+                        properties:
+                          id_grupo:
+                            type: integer
+                            example: 1
+                          nombre:
+                            type: string
+                            example: Grupo A - Natación Infantil
+                          clasesCreadas:
+                            type: integer
+                            example: 15
+                          exito:
+                            type: boolean
+                            example: true
+                          error:
+                            type: string
+                            example: null
+                            description: Mensaje de error si exito es false
+            example:
+              success: true
+              message: Clases generadas correctamente para el mes actual. 45 clases creadas para 3 grupos.
+              data:
+                gruposProcesados: 3
+                gruposConError: 0
+                totalClasesCreadas: 45
+                mes: 1
+                anio: 2024
+                detalles:
+                  - id_grupo: 1
+                    nombre: Grupo A - Natación Infantil
+                    clasesCreadas: 15
+                    exito: true
+                    error: null
+                  - id_grupo: 2
+                    nombre: Grupo B - Natación Juvenil
+                    clasesCreadas: 12
+                    exito: true
+                    error: null
+                  - id_grupo: 3
+                    nombre: Grupo C - Natación Adultos
+                    clasesCreadas: 18
+                    exito: true
+                    error: null
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/actualizar-estados:
+  post:
+    summary: Actualizar estados de clases finalizadas manualmente
+    description: |
+      Actualiza automáticamente el estado de las clases pendientes que ya terminaron
+      (fecha + hora_fin ya pasó) cambiándolas a estado "realizada".
+      Solo actualiza clases con estado "pendiente", no modifica clases suspendidas.
+      Esta tarea también se ejecuta automáticamente cada 15 minutos.
+    tags: [Clases]
+    responses:
+      200:
+        description: Estados actualizados correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 5 clase(s) actualizada(s) a estado "realizada"
+                data:
+                  type: object
+                  properties:
+                    clasesActualizadas:
+                      type: integer
+                      example: 5
+                      description: Número de clases actualizadas
+                    mensaje:
+                      type: string
+                      example: 5 clase(s) actualizada(s) a estado "realizada"
+            example:
+              success: true
+              message: 5 clase(s) actualizada(s) a estado "realizada"
+              data:
+                clasesActualizadas: 5
+                mensaje: 5 clase(s) actualizada(s) a estado "realizada"
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/grupo/{idGrupo}:
+  get:
+    summary: Obtener clases por grupo
+    tags: [Clases]
+    parameters:
+      - in: path
+        name: idGrupo
+        required: true
+        schema:
+          type: integer
+        description: ID del grupo
+    responses:
+      200:
+        description: Lista de clases obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clases obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Clase'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/fecha:
+  get:
+    summary: Obtener clases por fecha
+    tags: [Clases]
+    parameters:
+      - in: query
+        name: fecha
+        required: true
+        schema:
+          type: string
+          format: date
+        description: Fecha de las clases a buscar
+        example: '2024-01-15'
+    responses:
+      200:
+        description: Lista de clases obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clases obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Clase'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/fecha-range:
+  get:
+    summary: Obtener clases por rango de fechas
+    tags: [Clases]
+    parameters:
+      - in: query
+        name: fechaInicio
+        required: true
+        schema:
+          type: string
+          format: date
+        description: Fecha de inicio del rango
+        example: '2024-01-01'
+      - in: query
+        name: fechaFin
+        required: true
+        schema:
+          type: string
+          format: date
+        description: Fecha de fin del rango
+        example: '2024-01-31'
+    responses:
+      200:
+        description: Lista de clases obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clases obtenidas correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Clase'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/clases/{id}:
+  get:
+    summary: Obtener una clase por ID
+    tags: [Clases]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la clase
+    responses:
+      200:
+        description: Clase obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clase obtenida correctamente
+                data:
+                  $ref: '#/components/schemas/Clase'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar una clase existente
+    tags: [Clases]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la clase
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fecha_clase:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de la clase
+              hora_inicio:
+                type: string
+                format: time
+                example: '09:00:00'
+                description: Hora de inicio de la clase (formato HH:MM o HH:MM:SS)
+              hora_fin:
+                type: string
+                format: time
+                example: '10:30:00'
+                description: Hora de fin de la clase (formato HH:MM o HH:MM:SS)
+              id_grupo:
+                type: integer
+                example: 1
+                description: ID del grupo de la clase
+              estado:
+                type: string
+                enum: [pendiente, realizada, suspendida]
+                example: pendiente
+                description: Estado de la clase (pendiente, realizada, suspendida)
+    responses:
+      200:
+        description: Clase actualizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clase actualizada correctamente
+                data:
+                  $ref: '#/components/schemas/Clase'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar una clase
+    tags: [Clases]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID de la clase
+    responses:
+      200:
+        description: Clase eliminada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Clase eliminada correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Clase eliminada correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

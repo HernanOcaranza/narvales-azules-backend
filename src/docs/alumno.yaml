@@ -1,0 +1,351 @@
+/api/alumnos/search:
+  get:
+    summary: Buscar alumnos por nombre
+    tags: [Alumnos]
+    parameters:
+      - in: query
+        name: nombre
+        required: true
+        schema:
+          type: string
+        description: Nombre o apellido del alumno a buscar (búsqueda parcial)
+        example: María
+    responses:
+      200:
+        description: Búsqueda de alumnos realizada correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Búsqueda de alumnos realizada correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Alumno'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/alumnos:
+  get:
+    summary: Obtener todos los alumnos
+    tags: [Alumnos]
+    responses:
+      200:
+        description: Lista de alumnos obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumnos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Alumno'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  post:
+    summary: Crear un nuevo alumno
+    tags: [Alumnos]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - nombre
+              - apellido
+              - fecha_registro
+              - id_tutor
+              - id_categoria
+              - id_condicion
+            properties:
+              nombre:
+                type: string
+                maxLength: 50
+                example: María
+                description: Nombre del alumno
+              apellido:
+                type: string
+                maxLength: 50
+                example: González
+                description: Apellido del alumno
+              dni:
+                type: string
+                maxLength: 8
+                example: '12345678'
+                description: DNI del alumno
+              fecha_nacimiento:
+                type: string
+                format: date
+                example: '2010-05-15'
+                description: Fecha de nacimiento del alumno
+              direccion:
+                type: string
+                maxLength: 80
+                example: 'Calle Principal 123'
+                description: Dirección del alumno
+              fecha_registro:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de registro del alumno
+              estado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del alumno (1 activo, 0 inactivo)
+              certificado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 0
+                description: Certificado médico del alumno (1 tiene certificado, 0 no tiene certificado)
+              id_tutor:
+                type: integer
+                example: 1
+                description: ID del tutor del alumno
+              id_categoria:
+                type: integer
+                example: 1
+                description: ID de la categoría del alumno
+              id_condicion:
+                type: integer
+                example: 1
+                description: ID de la condición del alumno
+    responses:
+      201:
+        description: Alumno creado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumno creado correctamente
+                data:
+                  $ref: '#/components/schemas/Alumno'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/alumnos/tutor/{idTutor}:
+  get:
+    summary: Obtener alumnos por tutor
+    tags: [Alumnos]
+    parameters:
+      - in: path
+        name: idTutor
+        required: true
+        schema:
+          type: integer
+        description: ID del tutor
+    responses:
+      200:
+        description: Lista de alumnos obtenida correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumnos obtenidos correctamente
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Alumno'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+/api/alumnos/{id}:
+  get:
+    summary: Obtener un alumno por ID
+    tags: [Alumnos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del alumno
+    responses:
+      200:
+        description: Alumno obtenido correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumno obtenido correctamente
+                data:
+                  $ref: '#/components/schemas/Alumno'
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  put:
+    summary: Actualizar un alumno existente
+    tags: [Alumnos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del alumno
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              nombre:
+                type: string
+                maxLength: 50
+                example: María José
+                description: Nombre del alumno
+              apellido:
+                type: string
+                maxLength: 50
+                example: González Pérez
+                description: Apellido del alumno
+              dni:
+                type: string
+                maxLength: 8
+                example: '12345678'
+                description: DNI del alumno
+              fecha_nacimiento:
+                type: string
+                format: date
+                example: '2010-05-15'
+                description: Fecha de nacimiento del alumno
+              direccion:
+                type: string
+                maxLength: 80
+                example: 'Calle Principal 123'
+                description: Dirección del alumno
+              fecha_registro:
+                type: string
+                format: date
+                example: '2024-01-15'
+                description: Fecha de registro del alumno
+              estado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 1
+                description: Estado del alumno (1 activo, 0 inactivo)
+              certificado:
+                type: integer
+                minimum: 0
+                maximum: 1
+                example: 0
+                description: Certificado médico del alumno (1 tiene certificado, 0 no tiene certificado)
+              id_tutor:
+                type: integer
+                example: 1
+                description: ID del tutor del alumno
+              id_categoria:
+                type: integer
+                example: 1
+                description: ID de la categoría del alumno
+              id_condicion:
+                type: integer
+                example: 1
+                description: ID de la condición del alumno
+    responses:
+      200:
+        description: Alumno actualizado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumno actualizado correctamente
+                data:
+                  $ref: '#/components/schemas/Alumno'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      404:
+        $ref: '#/components/responses/NotFound'
+      409:
+        $ref: '#/components/responses/Conflict'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+
+  delete:
+    summary: Eliminar un alumno
+    tags: [Alumnos]
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID del alumno
+    responses:
+      200:
+        description: Alumno eliminado correctamente
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Alumno eliminado correctamente
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Alumno eliminado correctamente
+      404:
+        $ref: '#/components/responses/NotFound'
+      500:
+        $ref: '#/components/responses/InternalServerError'
+

@@ -1,6 +1,6 @@
 import db from '../models/index.js';
 
-const { Grupo, Disciplina, Categoria } = db;
+const { Grupo, Disciplina, Categoria, GrupoHorario } = db;
 
 class GrupoRepository {
   async findAll() {
@@ -15,6 +15,12 @@ class GrupoRepository {
           model: Categoria,
           as: 'categoria',
           attributes: ['id_categoria', 'categoria', 'descripcion']
+        },
+        {
+          model: GrupoHorario,
+          as: 'horarios',
+          attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
+          required: false
         }
       ],
       order: [['nombre', 'ASC']]
@@ -33,6 +39,12 @@ class GrupoRepository {
           model: Categoria,
           as: 'categoria',
           attributes: ['id_categoria', 'categoria', 'descripcion']
+        },
+        {
+          model: GrupoHorario,
+          as: 'horarios',
+          attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
+          required: false
         }
       ]
     });
@@ -57,6 +69,12 @@ class GrupoRepository {
           model: Categoria,
           as: 'categoria',
           attributes: ['id_categoria', 'categoria', 'descripcion']
+        },
+        {
+          model: GrupoHorario,
+          as: 'horarios',
+          attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
+          required: false
         }
       ]
     });
@@ -75,6 +93,12 @@ class GrupoRepository {
           model: Categoria,
           as: 'categoria',
           attributes: ['id_categoria', 'categoria', 'descripcion']
+        },
+        {
+          model: GrupoHorario,
+          as: 'horarios',
+          attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
+          required: false
         }
       ]
     });
