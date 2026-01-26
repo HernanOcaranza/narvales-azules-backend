@@ -130,7 +130,8 @@ CREATE TABLE Asistencia(
 CREATE TABLE Tipo_Membrecia(
     id_tipo_membrecia INT AUTO_INCREMENT PRIMARY KEY,
     tipo_membrecia VARCHAR(20) NOT NULL,
-    frecuencia_semanal INT
+    frecuencia_semanal INT,
+    duracion_dias INT COMMENT 'Duración en días de la membresía (ej: 30 para mensual, 15 para quincenal)'
 ) ENGINE=InnoDB;
 
 CREATE TABLE Precio_Membrecia(

@@ -21,6 +21,38 @@ class AlumnoRepository {
           model: Condicion,
           as: 'condicion',
           attributes: ['id_condicion', 'condicion', 'atencion', 'descripcion']
+        },
+        {
+          model: Membrecia,
+          as: 'membresias',
+          include: [
+            {
+              model: Tipo_Membrecia,
+              as: 'tipo_membrecia',
+              attributes: ['id_tipo_membrecia', 'tipo_membrecia', 'frecuencia_semanal']
+            },
+            {
+              model: Grupo,
+              as: 'grupo',
+              attributes: ['id_grupo', 'nombre']
+            },
+            {
+              model: Pago,
+              as: 'pago',
+              include: [
+                {
+                  model: Detalle_Pago,
+                  as: 'detalles',
+                  attributes: ['id_detalle_pago', 'metodo_pago', 'monto_parcial', 'fecha_detalle', 'referencia_transferencia']
+                }
+              ],
+              attributes: ['id_pago', 'tipo', 'fecha_pago', 'estado', 'observaciones']
+            }
+          ],
+          attributes: ['id_membrecia', 'fecha_inicio', 'fecha_fin', 'estado'],
+          required: false,
+          separate: true,
+          order: [['fecha_inicio', 'DESC']]
         }
       ],
       order: [['apellido', 'ASC'], ['nombre', 'ASC']]

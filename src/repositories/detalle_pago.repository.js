@@ -28,7 +28,8 @@ class DetallePagoRepository {
     });
   }
 
-  async findByPagoId(idPago) {
+  async findByPagoId(idPago, transaction = null) {
+    const options = transaction ? { transaction } : {};
     return await Detalle_Pago.findAll({
       where: { id_pago: idPago },
       include: [
@@ -38,7 +39,8 @@ class DetallePagoRepository {
           required: false
         }
       ],
-      order: [['fecha_detalle', 'DESC']]
+      order: [['fecha_detalle', 'DESC']],
+      ...options
     });
   }
 

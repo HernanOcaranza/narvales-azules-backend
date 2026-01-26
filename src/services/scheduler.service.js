@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import claseGeneratorService from './clase-generator.service.js';
 import claseService from './clase.service.js';
+import membresiaService from './membrecia.service.js';
 
 class SchedulerService {
   constructor() {
@@ -59,6 +60,29 @@ class SchedulerService {
       nombre: 'actualizarEstadosClases',
       tarea: actualizarEstadosClases,
       descripcion: 'Actualiza automáticamente el estado de clases finalizadas cada 15 minutos'
+    });
+
+    // Tarea: Actualizar estados de membresías vencidas diariamente a las 00:00
+    // Cron: '0 0 * * *' = minuto 0, hora 0, cualquier día del mes, cualquier mes, cualquier día de la semana
+    const actualizarEstadosMembresias = cron.schedule('0 0 * * *', async () => {
+      console.log('🔄 Ejecutando tarea programada: Actualizar estados de membresías vencidas...');
+      try {
+        const resultado = await membresiaService.actualizarEstadosAutomaticamente();
+        if (resultado.membresiasActualizadas > 0) {
+          console.log(`✅ ${resultado.mensaje}`);
+        }
+      } catch (error) {
+        console.error('❌ Error al actualizar estados de membresías automáticamente:', error.message);
+      }
+    }, {
+      scheduled: false, // No iniciar automáticamente
+      timezone: 'America/Argentina/Buenos_Aires' // Ajustar según tu zona horaria
+    });
+
+    this.tareas.push({
+      nombre: 'actualizarEstadosMembresias',
+      tarea: actualizarEstadosMembresias,
+      descripcion: 'Actualiza automáticamente el estado de membresías vencidas diariamente a las 00:00'
     });
 
     // Iniciar todas las tareas

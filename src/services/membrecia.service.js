@@ -4,9 +4,73 @@ import detallePagoRepository from '../repositories/detalle_pago.repository.js';
 import tipoMembreciaRepository from '../repositories/tipo_membrecia.repository.js';
 import alumnoRepository from '../repositories/alumno.repository.js';
 import grupoRepository from '../repositories/grupo.repository.js';
+import precioMembreciaRepository from '../repositories/precio_membrecia.repository.js';
 import { sequelize } from '../config/database.js';
 
 class MembreciaService {
+  /**
+   * Calcula la fecha de fin basándose en la fecha de inicio y la duración en días
+   * Si duracion_dias es 30, calcula como un mes calendario exacto
+   * @param {string} fechaInicio - Fecha de inicio en formato YYYY-MM-DD
+   * @param {number} duracionDias - Duración en días
+   * @returns {string|null} - Fecha de fin en formato YYYY-MM-DD o null
+   */
+  calcularFechaFin(fechaInicio, duracionDias) {
+    if (!fechaInicio || !duracionDias) return null;
+    
+    const fecha = new Date(fechaInicio);
+    
+    // Si es 30 días, calcular como un mes calendario exacto
+    if (duracionDias === 30) {
+      const diaOriginal = fecha.getDate();
+      fecha.setMonth(fecha.getMonth() + 1);
+      // Ajustar si el día no existe en el mes siguiente (ej: 31 de enero -> 28/29 de febrero)
+      const ultimoDiaDelMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).getDate();
+      fecha.setDate(Math.min(diaOriginal, ultimoDiaDelMes));
+    } else {
+      // Para otros valores, usar días fijos (el día de inicio cuenta como día 1)
+      fecha.setDate(fecha.getDate() + duracionDias - 1);
+    }
+    
+    return fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  }
+
+  /**
+   * Calcula el estado del pago basado en el total pagado y el precio de la membresía
+   * @param {number} totalPagado - Total de los detalles de pago
+   * @param {number} precioMembrecia - Precio de la membresía
+   * @returns {string} - Estado del pago: 'pendiente', 'parcial', 'completo'
+   */
+  calcularEstadoPago(totalPagado, precioMembrecia) {
+    if (!precioMembrecia || precioMembrecia <= 0) {
+      // Si no hay precio definido, considerar como pendiente
+      return 'pendiente';
+    }
+
+    if (totalPagado <= 0) {
+      return 'pendiente';
+    } else if (totalPagado >= precioMembrecia) {
+      return 'completo';
+    } else {
+      return 'parcial';
+    }
+  }
+
+  /**
+   * Calcula el total pagado a partir de los detalles de pago
+   * @param {Array} detalles - Array de detalles de pago
+   * @returns {number} - Total pagado
+   */
+  calcularTotalPagado(detalles) {
+    if (!detalles || detalles.length === 0) {
+      return 0;
+    }
+    return detalles.reduce((total, detalle) => {
+      const monto = parseFloat(detalle.monto_parcial) || 0;
+      return total + monto;
+    }, 0);
+  }
+
   async getAllMembresias(filtros = {}) {
     try {
       // Validar y procesar filtros
@@ -149,9 +213,13 @@ class MembreciaService {
         throw new Error('El grupo especificado no existe');
       }
 
-      // Validar fechas
-      if (data.fecha_fin && data.fecha_fin < data.fecha_inicio) {
-        throw new Error('La fecha de fin no puede ser anterior a la fecha de inicio');
+      // Calcular fecha_fin automáticamente basándose en duracion_dias del tipo de membresía
+      // La fecha_fin se calcula siempre en el backend, ignorando cualquier valor que venga del frontend
+      let fechaFin = null;
+      if (tipo.duracion_dias) {
+        const fechaInicio = new Date(data.fecha_inicio);
+        fechaInicio.setDate(fechaInicio.getDate() + tipo.duracion_dias - 1); // -1 porque el día de inicio cuenta
+        fechaFin = fechaInicio.toISOString().split('T')[0]; // Formato YYYY-MM-DD
       }
 
       // Validar estado
@@ -160,7 +228,18 @@ class MembreciaService {
         throw new Error(`El estado debe ser uno de: ${estadosValidos.join(', ')}`);
       }
 
-      return await membresiaRepository.create(data);
+      // Crear la membresía con la fecha_fin calculada automáticamente
+      const membresiaData = {
+        fecha_inicio: data.fecha_inicio,
+        fecha_fin: this.calcularFechaFin(data.fecha_inicio, tipo.duracion_dias), // Siempre usar la fecha calculada, ignorar data.fecha_fin del frontend
+        estado: data.estado,
+        id_alumno: data.id_alumno,
+        id_pago: data.id_pago,
+        id_tipo_membrecia: data.id_tipo_membrecia,
+        id_grupo: data.id_grupo
+      };
+
+      return await membresiaRepository.create(membresiaData);
     } catch (error) {
       throw new Error(`Error al crear membresía: ${error.message}`);
     }
@@ -193,10 +272,9 @@ class MembreciaService {
         throw new Error('El grupo especificado no existe');
       }
 
-      // Validar fechas
-      if (data.fecha_fin && data.fecha_fin < data.fecha_inicio) {
-        throw new Error('La fecha de fin no puede ser anterior a la fecha de inicio');
-      }
+      // Calcular fecha_fin automáticamente basándose en duracion_dias del tipo de membresía
+      // La fecha_fin se calcula siempre en el backend, ignorando cualquier valor que venga del frontend
+      const fechaFin = this.calcularFechaFin(data.fecha_inicio, tipo.duracion_dias);
 
       // Validar estado de membresía
       const estadosValidos = ['activa', 'vencida', 'suspendida', 'cancelada'];
@@ -253,7 +331,7 @@ class MembreciaService {
       // Crear la membresía
       const membresiaData = {
         fecha_inicio: data.fecha_inicio,
-        fecha_fin: data.fecha_fin || null,
+        fecha_fin: fechaFin || null,
         estado: estadoMembrecia,
         id_alumno: data.id_alumno,
         id_pago: pago.id_pago,
@@ -262,6 +340,25 @@ class MembreciaService {
       };
 
       const membresia = await membresiaRepository.create(membresiaData, transaction);
+
+      // Calcular el estado del pago basado en el total pagado y el precio de la membresía
+      // Obtener los detalles de pago creados
+      const detallesCreados = await detallePagoRepository.findByPagoId(pago.id_pago, transaction);
+      const totalPagado = this.calcularTotalPagado(detallesCreados);
+      
+      // Obtener el precio vigente de la membresía para la fecha de inicio
+      const precioVigente = await precioMembreciaRepository.findPrecioVigente(
+        data.id_tipo_membrecia,
+        data.fecha_inicio
+      );
+      
+      const precioMembrecia = precioVigente ? parseFloat(precioVigente.precio) : 0;
+      const nuevoEstadoPago = this.calcularEstadoPago(totalPagado, precioMembrecia);
+      
+      // Actualizar el estado del pago si es diferente al inicial
+      if (nuevoEstadoPago !== estadoPago.toLowerCase()) {
+        await pagoRepository.update(pago.id_pago, { estado: nuevoEstadoPago }, transaction);
+      }
 
       // Commit de la transacción
       await transaction.commit();
@@ -282,12 +379,25 @@ class MembreciaService {
         return await this.updateMembreciaConPago(id, data);
       }
 
-      // Validar fechas si se están actualizando
-      if (data.fecha_inicio && data.fecha_fin) {
-        if (data.fecha_fin < data.fecha_inicio) {
-          throw new Error('La fecha de fin no puede ser anterior a la fecha de inicio');
-        }
+      // Obtener la membresía existente para usar valores actuales si no se actualizan
+      const membresiaExistente = await membresiaRepository.findById(id);
+      if (!membresiaExistente) {
+        throw new Error('Membresía no encontrada');
       }
+
+      // Determinar el tipo de membresía a usar (nuevo o existente)
+      const idTipoMembrecia = data.id_tipo_membrecia || membresiaExistente.id_tipo_membrecia;
+      const tipo = await tipoMembreciaRepository.findById(idTipoMembrecia);
+      if (!tipo) {
+        throw new Error('El tipo de membresía especificado no existe');
+      }
+
+      // Determinar la fecha de inicio a usar (nueva o existente)
+      const fechaInicio = data.fecha_inicio || membresiaExistente.fecha_inicio;
+
+      // Calcular fecha_fin automáticamente si se actualiza fecha_inicio o id_tipo_membrecia
+      // La fecha_fin siempre se calcula en el backend, ignorando cualquier valor del frontend
+      const fechaFin = this.calcularFechaFin(fechaInicio, tipo.duracion_dias);
 
       // Validar estado si se está actualizando
       if (data.estado) {
@@ -308,13 +418,6 @@ class MembreciaService {
         }
       }
 
-      if (data.id_tipo_membrecia) {
-        const tipo = await tipoMembreciaRepository.findById(data.id_tipo_membrecia);
-        if (!tipo) {
-          throw new Error('El tipo de membresía especificado no existe');
-        }
-      }
-
       if (data.id_alumno) {
         const alumno = await alumnoRepository.findById(data.id_alumno);
         if (!alumno) {
@@ -329,7 +432,15 @@ class MembreciaService {
         }
       }
 
-      const membresia = await membresiaRepository.update(id, data);
+      // Preparar datos de actualización, ignorando fecha_fin del frontend y usando la calculada
+      // Si fechaFin es null (tipo sin duracion_dias), mantener la fecha_fin existente
+      const { fecha_fin, ...dataSinFechaFin } = data; // Excluir fecha_fin del frontend
+      const dataActualizada = {
+        ...dataSinFechaFin,
+        ...(fechaFin !== null && { fecha_fin: fechaFin }) // Solo agregar si se calculó
+      };
+
+      const membresia = await membresiaRepository.update(id, dataActualizada);
       if (!membresia) {
         throw new Error('Membresía no encontrada');
       }
@@ -349,11 +460,23 @@ class MembreciaService {
         throw new Error('Membresía no encontrada');
       }
 
-      // Validar fechas si se están actualizando
-      if (data.fecha_inicio && data.fecha_fin) {
-        if (data.fecha_fin < data.fecha_inicio) {
-          throw new Error('La fecha de fin no puede ser anterior a la fecha de inicio');
-        }
+      // Determinar el tipo de membresía a usar (nuevo o existente)
+      const idTipoMembrecia = data.id_tipo_membrecia || membresiaExistente.id_tipo_membrecia;
+      const tipo = await tipoMembreciaRepository.findById(idTipoMembrecia);
+      if (!tipo) {
+        throw new Error('El tipo de membresía especificado no existe');
+      }
+
+      // Determinar la fecha de inicio a usar (nueva o existente)
+      const fechaInicio = data.fecha_inicio || membresiaExistente.fecha_inicio;
+
+      // Calcular fecha_fin automáticamente si se actualiza fecha_inicio o id_tipo_membrecia
+      // La fecha_fin siempre se calcula en el backend, ignorando cualquier valor del frontend
+      let fechaFin = null;
+      if (tipo.duracion_dias && fechaInicio) {
+        const fecha = new Date(fechaInicio);
+        fecha.setDate(fecha.getDate() + tipo.duracion_dias - 1); // -1 porque el día de inicio cuenta
+        fechaFin = fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
       }
 
       // Validar estado si se está actualizando
@@ -361,14 +484,6 @@ class MembreciaService {
         const estadosValidos = ['activa', 'vencida', 'suspendida', 'cancelada'];
         if (!estadosValidos.includes(data.estado.toLowerCase())) {
           throw new Error(`El estado debe ser uno de: ${estadosValidos.join(', ')}`);
-        }
-      }
-
-      // Validar relaciones si se están actualizando
-      if (data.id_tipo_membrecia) {
-        const tipo = await tipoMembreciaRepository.findById(data.id_tipo_membrecia);
-        if (!tipo) {
-          throw new Error('El tipo de membresía especificado no existe');
         }
       }
 
@@ -390,9 +505,10 @@ class MembreciaService {
       const idPagoExistente = membresiaExistente.id_pago;
 
       // Preparar datos de la membresía (sin incluir el objeto pago)
+      // La fecha_fin siempre se calcula automáticamente, ignorando cualquier valor del frontend
       const membresiaData = {
         ...(data.fecha_inicio && { fecha_inicio: data.fecha_inicio }),
-        ...(data.fecha_fin !== undefined && { fecha_fin: data.fecha_fin }),
+        ...(fechaFin !== null && { fecha_fin: fechaFin }),
         ...(data.estado && { estado: data.estado }),
         ...(data.id_alumno && { id_alumno: data.id_alumno }),
         ...(data.id_tipo_membrecia && { id_tipo_membrecia: data.id_tipo_membrecia }),
@@ -428,7 +544,7 @@ class MembreciaService {
         // Manejar detalles de pago
         if (pagoData.detalles && Array.isArray(pagoData.detalles)) {
           // Obtener detalles existentes
-          const detallesExistentes = await detallePagoRepository.findByPagoId(idPagoExistente);
+          const detallesExistentes = await detallePagoRepository.findByPagoId(idPagoExistente, transaction);
           const idsDetallesExistentes = detallesExistentes.map(d => d.id_detalle_pago);
           const idsDetallesEnviados = pagoData.detalles
             .filter(d => d.id_detalle_pago)
@@ -471,6 +587,30 @@ class MembreciaService {
               await detallePagoRepository.create(detalleCreateData, transaction);
             }
           }
+
+          // Recalcular el estado del pago después de actualizar los detalles
+          const detallesActualizados = await detallePagoRepository.findByPagoId(idPagoExistente, transaction);
+          const totalPagado = this.calcularTotalPagado(detallesActualizados);
+          
+          // Obtener el tipo de membresía actual (puede haber cambiado)
+          const membresiaActualizada = await membresiaRepository.findById(id, transaction);
+          const idTipoMembreciaActual = membresiaActualizada.id_tipo_membrecia;
+          const fechaInicioActual = membresiaActualizada.fecha_inicio;
+          
+          // Obtener el precio vigente de la membresía
+          const precioVigente = await precioMembreciaRepository.findPrecioVigente(
+            idTipoMembreciaActual,
+            fechaInicioActual
+          );
+          
+          const precioMembrecia = precioVigente ? parseFloat(precioVigente.precio) : 0;
+          const nuevoEstadoPago = this.calcularEstadoPago(totalPagado, precioMembrecia);
+          
+          // Actualizar el estado del pago si es diferente al actual
+          const pagoActual = await pagoRepository.findById(idPagoExistente);
+          if (pagoActual && nuevoEstadoPago !== pagoActual.estado.toLowerCase()) {
+            await pagoRepository.update(idPagoExistente, { estado: nuevoEstadoPago }, transaction);
+          }
         }
       }
 
@@ -507,6 +647,47 @@ class MembreciaService {
       return membresia;
     } catch (error) {
       throw new Error(`Error al obtener membresía completa: ${error.message}`);
+    }
+  }
+
+  /**
+   * Actualiza automáticamente el estado de las membresías activas que han vencido
+   * Cambia su estado a "vencida" si la fecha_fin ya pasó
+   * Solo actualiza membresías que estén en estado "activa"
+   */
+  async actualizarEstadosAutomaticamente() {
+    try {
+      const membresiasVencidas = await membresiaRepository.findMembresiasVencidas();
+      
+      if (membresiasVencidas.length === 0) {
+        return {
+          membresiasActualizadas: 0,
+          mensaje: 'No hay membresías activas que hayan vencido'
+        };
+      }
+
+      // Filtrar solo las que están activas (aunque el query ya filtra por activa)
+      // Por seguridad, verificamos que el estado sea activa
+      const idsParaActualizar = membresiasVencidas
+        .filter(membresia => membresia.estado === 'activa')
+        .map(membresia => membresia.id_membrecia);
+
+      if (idsParaActualizar.length === 0) {
+        return {
+          membresiasActualizadas: 0,
+          mensaje: 'No hay membresías activas para actualizar'
+        };
+      }
+
+      // Actualizar todas las membresías a estado "vencida"
+      const numActualizadas = await membresiaRepository.updateEstadoMasivo(idsParaActualizar, 'vencida');
+
+      return {
+        membresiasActualizadas: numActualizadas,
+        mensaje: `${numActualizadas} membresía(s) actualizada(s) a estado "vencida"`
+      };
+    } catch (error) {
+      throw new Error(`Error al actualizar estados automáticamente: ${error.message}`);
     }
   }
 }

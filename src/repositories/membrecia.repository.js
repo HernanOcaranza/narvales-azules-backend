@@ -51,7 +51,14 @@ class MembreciaRepository {
         {
           model: Pago,
           as: 'pago',
-          required: false
+          required: false,
+          include: [
+            {
+              model: Detalle_Pago,
+              as: 'detalles',
+              required: false
+            }
+          ]
         },
         {
           model: Tipo_Membrecia,
@@ -79,7 +86,14 @@ class MembreciaRepository {
         {
           model: Pago,
           as: 'pago',
-          required: false
+          required: false,
+          include: [
+            {
+              model: Detalle_Pago,
+              as: 'detalles',
+              required: false
+            }
+          ]
         },
         {
           model: Tipo_Membrecia,
@@ -107,7 +121,14 @@ class MembreciaRepository {
         {
           model: Pago,
           as: 'pago',
-          required: false
+          required: false,
+          include: [
+            {
+              model: Detalle_Pago,
+              as: 'detalles',
+              required: false
+            }
+          ]
         },
         {
           model: Tipo_Membrecia,
@@ -136,7 +157,14 @@ class MembreciaRepository {
         {
           model: Pago,
           as: 'pago',
-          required: false
+          required: false,
+          include: [
+            {
+              model: Detalle_Pago,
+              as: 'detalles',
+              required: false
+            }
+          ]
         },
         {
           model: Tipo_Membrecia,
@@ -203,7 +231,7 @@ class MembreciaRepository {
         {
           model: Tipo_Membrecia,
           as: 'tipo_membrecia',
-          attributes: ['id_tipo_membrecia', 'tipo_membrecia', 'frecuencia_semanal']
+          attributes: ['id_tipo_membrecia', 'tipo_membrecia', 'frecuencia_semanal', 'duracion_dias']
         },
         {
           model: Grupo,
@@ -237,6 +265,48 @@ class MembreciaRepository {
         }
       ]
     });
+  }
+
+  /**
+   * Encuentra membresías activas que han vencido (fecha_fin < fecha actual)
+   * @returns {Promise<Array>} Array de membresías vencidas
+   */
+  async findMembresiasVencidas() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+    return await Membrecia.findAll({
+      where: {
+        estado: 'activa',
+        fecha_fin: {
+          [Op.lt]: fechaHoy
+        }
+      }
+    });
+  }
+
+  /**
+   * Actualiza el estado de múltiples membresías
+   * @param {Array<number>} ids - Array de IDs de membresías a actualizar
+   * @param {string} nuevoEstado - Nuevo estado a asignar
+   * @param {Object} transaction - Transacción opcional
+   * @returns {Promise<number>} Número de filas actualizadas
+   */
+  async updateEstadoMasivo(ids, nuevoEstado, transaction = null) {
+    const options = transaction ? { transaction } : {};
+    const [numActualizadas] = await Membrecia.update(
+      { estado: nuevoEstado },
+      {
+        where: {
+          id_membrecia: {
+            [Op.in]: ids
+          }
+        },
+        ...options
+      }
+    );
+    return numActualizadas;
   }
 }
 
