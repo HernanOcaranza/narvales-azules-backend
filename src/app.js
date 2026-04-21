@@ -22,6 +22,7 @@ import detallePagoRoutes from './routes/detalle_pago.routes.js';
 import tipoMembreciaRoutes from './routes/tipo_membrecia.routes.js';
 import precioMembreciaRoutes from './routes/precio_membrecia.routes.js';
 import membresiaRoutes from './routes/membrecia.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use('/api/detalle-pagos', authMiddleware, detallePagoRoutes);
 app.use('/api/tipo-membresias', authMiddleware, tipoMembreciaRoutes);
 app.use('/api/precio-membresias', authMiddleware, precioMembreciaRoutes);
 app.use('/api/membresias', authMiddleware, membresiaRoutes);
+app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 
 // Ruta 404
 app.use((req, res) => {

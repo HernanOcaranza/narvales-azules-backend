@@ -16,7 +16,7 @@ const startServer = async () => {
     // Sincronizar modelos (solo en desarrollo)
     // En producción, usar migraciones de Sequelize
     if (env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: false }); // alter: true para modificar tablas existentes
+      await sequelize.sync({ alter: true }); // alter: true para modificar tablas existentes
       console.log('✅ Modelos sincronizados con la base de datos.');
     }
 
