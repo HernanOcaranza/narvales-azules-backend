@@ -32,6 +32,15 @@ const Detalle_Pago = sequelize.define('Detalle_Pago', {
       model: 'Pago',
       key: 'id_pago'
     }
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Detalle_Pago',

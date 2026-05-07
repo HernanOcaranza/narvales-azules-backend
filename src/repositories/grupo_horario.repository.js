@@ -5,11 +5,14 @@ const { GrupoHorario, Grupo } = db;
 class GrupoHorarioRepository {
   async findAll() {
     return await GrupoHorario.findAll({
+      where: { estado: 1 },
       include: [
         {
           model: Grupo,
           as: 'grupo',
-          attributes: ['id_grupo', 'nombre', 'cupo_maximo', 'estado']
+          where: { estado: 1 },
+          attributes: ['id_grupo', 'nombre', 'cupo_maximo', 'estado'],
+          required: false
         }
       ],
       order: [['dia_semana', 'ASC'], ['hora_inicio', 'ASC']]
@@ -17,7 +20,8 @@ class GrupoHorarioRepository {
   }
 
   async findById(id) {
-    return await GrupoHorario.findByPk(id, {
+    return await GrupoHorario.findOne({
+      where: { id_grupo_horario: id, estado: 1 },
       include: [
         {
           model: Grupo,
@@ -32,7 +36,8 @@ class GrupoHorarioRepository {
     return await GrupoHorario.findAll({
       where: { 
         id_grupo: idGrupo,
-        activo: 1
+        activo: 1,
+        estado: 1
       },
       include: [
         {
@@ -49,7 +54,8 @@ class GrupoHorarioRepository {
     return await GrupoHorario.findAll({
       where: { 
         dia_semana: diaSemana,
-        activo: 1
+        activo: 1,
+        estado: 1
       },
       include: [
         {
@@ -71,7 +77,7 @@ class GrupoHorarioRepository {
   }
 
   async update(id, data) {
-    const horario = await GrupoHorario.findByPk(id);
+    const horario = await GrupoHorario.findOne({ where: { id_grupo_horario: id, estado: 1 } });
     if (!horario) {
       return null;
     }
@@ -79,18 +85,19 @@ class GrupoHorarioRepository {
   }
 
   async delete(id) {
-    const horario = await GrupoHorario.findByPk(id);
+    const horario = await GrupoHorario.findOne({ where: { id_grupo_horario: id, estado: 1 } });
     if (!horario) {
       return false;
     }
-    await horario.destroy();
+    await horario.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 
   async deleteByGrupo(idGrupo) {
-    return await GrupoHorario.destroy({
-      where: { id_grupo: idGrupo }
-    });
+    return await GrupoHorario.update(
+      { estado: 0, eliminado_en: new Date() },
+      { where: { id_grupo: idGrupo, estado: 1 } }
+    );
   }
 }
 

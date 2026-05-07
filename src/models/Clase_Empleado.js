@@ -30,6 +30,15 @@ const ClaseEmpleado = sequelize.define('ClaseEmpleado', {
   rol: {
     type: DataTypes.STRING(20),
     allowNull: false
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Clase_Empleado',

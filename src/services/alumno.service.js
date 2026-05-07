@@ -4,9 +4,11 @@ import db from '../models/index.js';
 const { Tutor, Categoria, Condicion } = db;
 
 class AlumnoService {
-  async getAllAlumnos() {
+  async getAllAlumnos(options = {}) {
     try {
-      return await alumnoRepository.findAll();
+      const { page = 1, limit = 10, filters = {} } = options;
+      const offset = (page - 1) * limit;
+      return await alumnoRepository.findAll({ limit, offset, filters });
     } catch (error) {
       throw new Error(`Error al obtener alumnos: ${error.message}`);
     }

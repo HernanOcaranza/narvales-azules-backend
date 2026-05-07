@@ -5,17 +5,20 @@ const { Condicion } = db;
 class CondicionRepository {
   async findAll() {
     return await Condicion.findAll({
+      where: { estado: 1 },
       order: [['condicion', 'ASC']]
     });
   }
 
   async findById(id) {
-    return await Condicion.findByPk(id);
+    return await Condicion.findOne({
+      where: { id_condicion: id, estado: 1 }
+    });
   }
 
   async findByCondicion(condicion) {
     return await Condicion.findOne({ 
-      where: { condicion } 
+      where: { condicion, estado: 1 } 
     });
   }
 
@@ -24,7 +27,7 @@ class CondicionRepository {
   }
 
   async update(id, data) {
-    const condicion = await Condicion.findByPk(id);
+    const condicion = await Condicion.findOne({ where: { id_condicion: id, estado: 1 } });
     if (!condicion) {
       return null;
     }
@@ -32,11 +35,11 @@ class CondicionRepository {
   }
 
   async delete(id) {
-    const condicion = await Condicion.findByPk(id);
+    const condicion = await Condicion.findOne({ where: { id_condicion: id, estado: 1 } });
     if (!condicion) {
       return false;
     }
-    await condicion.destroy();
+    await condicion.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

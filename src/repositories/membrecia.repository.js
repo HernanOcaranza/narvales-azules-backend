@@ -5,43 +5,47 @@ const { Membrecia, Alumno, Pago, Tipo_Membrecia, Grupo, Detalle_Pago, Tutor, Cat
 
 class MembreciaRepository {
   async findAll(filtros = {}) {
+    const { limit = 10, offset = 0, ...filtrosRest } = filtros;
     const where = {};
 
     // Filtro por id_alumno
-    if (filtros.idAlumno !== undefined && filtros.idAlumno !== null) {
-      where.id_alumno = parseInt(filtros.idAlumno);
+    if (filtrosRest.idAlumno !== undefined && filtrosRest.idAlumno !== null) {
+      where.id_alumno = parseInt(filtrosRest.idAlumno);
     }
 
     // Filtro por estado
-    if (filtros.estado !== undefined && filtros.estado !== null && filtros.estado !== '') {
-      where.estado = filtros.estado;
+    if (filtrosRest.estado !== undefined && filtrosRest.estado !== null && filtrosRest.estado !== '') {
+      where.estado = filtrosRest.estado;
     }
 
     // Filtro por id_tipo_membrecia
-    if (filtros.idTipoMembrecia !== undefined && filtros.idTipoMembrecia !== null) {
-      where.id_tipo_membrecia = parseInt(filtros.idTipoMembrecia);
+    if (filtrosRest.idTipoMembrecia !== undefined && filtrosRest.idTipoMembrecia !== null) {
+      where.id_tipo_membrecia = parseInt(filtrosRest.idTipoMembrecia);
     }
 
     // Filtro por id_grupo
-    if (filtros.idGrupo !== undefined && filtros.idGrupo !== null) {
-      where.id_grupo = parseInt(filtros.idGrupo);
+    if (filtrosRest.idGrupo !== undefined && filtrosRest.idGrupo !== null) {
+      where.id_grupo = parseInt(filtrosRest.idGrupo);
     }
 
     // Filtro por rango de fechas
-    if (filtros.fechaDesde || filtros.fechaHasta) {
+    if (filtrosRest.fechaDesde || filtrosRest.fechaHasta) {
       where.fecha_inicio = {};
       
-      if (filtros.fechaDesde) {
-        where.fecha_inicio[Op.gte] = filtros.fechaDesde;
+      if (filtrosRest.fechaDesde) {
+        where.fecha_inicio[Op.gte] = filtrosRest.fechaDesde;
       }
       
-      if (filtros.fechaHasta) {
-        where.fecha_inicio[Op.lte] = filtros.fechaHasta;
+      if (filtrosRest.fechaHasta) {
+        where.fecha_inicio[Op.lte] = filtrosRest.fechaHasta;
       }
     }
 
-    return await Membrecia.findAll({
-      where: Object.keys(where).length > 0 ? where : undefined,
+    const { count, rows } = await Membrecia.findAndCountAll({
+      where: { 
+        ...(Object.keys(where).length > 0 ? where : {}),
+        eliminado_en: null
+      },
       include: [
         {
           model: Alumno,
@@ -71,12 +75,16 @@ class MembreciaRepository {
           required: false
         }
       ],
-      order: [['fecha_inicio', 'DESC']]
+      order: [['fecha_inicio', 'DESC']],
+      limit,
+      offset
     });
+    return { data: rows, total: count };
   }
 
   async findById(id) {
-    return await Membrecia.findByPk(id, {
+    return await Membrecia.findOne({
+      where: { id_membrecia: id, eliminado_en: null },
       include: [
         {
           model: Alumno,
@@ -111,7 +119,7 @@ class MembreciaRepository {
 
   async findByAlumnoId(idAlumno) {
     return await Membrecia.findAll({
-      where: { id_alumno: idAlumno },
+      where: { id_alumno: idAlumno, eliminado_en: null },
       include: [
         {
           model: Alumno,
@@ -147,7 +155,7 @@ class MembreciaRepository {
 
   async findByPagoId(idPago) {
     return await Membrecia.findOne({
-      where: { id_pago: idPago },
+      where: { id_pago: idPago, eliminado_en: null },
       include: [
         {
           model: Alumno,
@@ -187,7 +195,7 @@ class MembreciaRepository {
 
   async update(id, data, transaction = null) {
     const options = transaction ? { transaction } : {};
-    const membresia = await Membrecia.findByPk(id, options);
+    const membresia = await Membrecia.findOne({ where: { id_membrecia: id, eliminado_en: null }, ...options });
     if (!membresia) {
       return null;
     }
@@ -195,16 +203,17 @@ class MembreciaRepository {
   }
 
   async delete(id) {
-    const membresia = await Membrecia.findByPk(id);
+    const membresia = await Membrecia.findOne({ where: { id_membrecia: id, eliminado_en: null } });
     if (!membresia) {
       return false;
     }
-    await membresia.destroy();
+    await membresia.update({ eliminado_en: new Date() });
     return true;
   }
 
   async findByIdWithAllDetails(id) {
-    return await Membrecia.findByPk(id, {
+    return await Membrecia.findOne({
+      where: { id_membrecia: id, eliminado_en: null },
       include: [
         {
           model: Alumno,

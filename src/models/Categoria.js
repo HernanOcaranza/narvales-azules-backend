@@ -15,6 +15,15 @@ const Categoria = sequelize.define('Categoria', {
   descripcion: {
     type: DataTypes.STRING(50),
     allowNull: false
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Categoria',

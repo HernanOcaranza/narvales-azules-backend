@@ -6,17 +6,20 @@ const { Tutor } = db;
 class TutorRepository {
   async findAll() {
     return await Tutor.findAll({
+      where: { estado: 1 },
       order: [['apellido', 'ASC'], ['nombre', 'ASC']]
     });
   }
 
   async findById(id) {
-    return await Tutor.findByPk(id);
+    return await Tutor.findOne({
+      where: { id_tutor: id, estado: 1 }
+    });
   }
 
   async findByDni(dni) {
     return await Tutor.findOne({ 
-      where: { dni } 
+      where: { dni, estado: 1 } 
     });
   }
 
@@ -26,7 +29,8 @@ class TutorRepository {
         [Op.or]: [
           { nombre: { [Op.like]: `%${nombre}%` } },
           { apellido: { [Op.like]: `%${nombre}%` } }
-        ]
+        ],
+        estado: 1
       },
       order: [['apellido', 'ASC'], ['nombre', 'ASC']]
     });
@@ -37,7 +41,7 @@ class TutorRepository {
   }
 
   async update(id, data) {
-    const tutor = await Tutor.findByPk(id);
+    const tutor = await Tutor.findOne({ where: { id_tutor: id, estado: 1 } });
     if (!tutor) {
       return null;
     }
@@ -45,11 +49,11 @@ class TutorRepository {
   }
 
   async delete(id) {
-    const tutor = await Tutor.findByPk(id);
+    const tutor = await Tutor.findOne({ where: { id_tutor: id, estado: 1 } });
     if (!tutor) {
       return false;
     }
-    await tutor.destroy();
+    await tutor.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

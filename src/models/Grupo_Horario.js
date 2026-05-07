@@ -39,6 +39,15 @@ const GrupoHorario = sequelize.define('Grupo_Horario', {
     allowNull: false,
     defaultValue: 1,
     comment: '1=Activo, 0=Inactivo'
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Grupo_Horario',

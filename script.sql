@@ -21,25 +21,32 @@ CREATE TABLE Empleado(
     dni CHAR(8),
     telefono CHAR(10) NOT NULL,
     fecha_alta DATE NOT NULL,
-    estado TINYINT(1) NOT NULL DEFAULT 1
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Categoria(
     id_categoria INT AUTO_INCREMENT PRIMARY KEY,
     categoria VARCHAR(20) NOT NULL,
-    descripcion VARCHAR(50) NOT NULL
+    descripcion VARCHAR(50) NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Condicion(
     id_condicion INT AUTO_INCREMENT PRIMARY KEY,
     condicion VARCHAR(50) NOT NULL,
     atencion INT NOT NULL,
-    descripcion VARCHAR(100)
+    descripcion VARCHAR(100),
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Disciplina(
     id_disciplina INT AUTO_INCREMENT PRIMARY KEY,
-    disciplina VARCHAR(20) NOT NULL
+    disciplina VARCHAR(20) NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Grupo(
@@ -47,6 +54,7 @@ CREATE TABLE Grupo(
     nombre VARCHAR(40) NOT NULL,
     cupo_maximo INT NOT NULL,
     estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
     id_disciplina INT NOT NULL,
     id_categoria INT NOT NULL,
     FOREIGN KEY (id_disciplina) REFERENCES Disciplina(id_disciplina),
@@ -60,6 +68,8 @@ CREATE TABLE Grupo_Horario(
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
     activo TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=Activo, 0=Inactivo',
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo) ON DELETE CASCADE,
     UNIQUE KEY unique_grupo_dia_hora (id_grupo, dia_semana, hora_inicio),
     CHECK (dia_semana BETWEEN 0 AND 6),
@@ -75,7 +85,9 @@ CREATE TABLE Tutor(
     apellido VARCHAR(50) NOT NULL,
     telefono CHAR(10),
     dni CHAR(8),
-    fecha_registro DATE NOT NULL
+    fecha_registro DATE NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Alumno(
@@ -89,6 +101,7 @@ CREATE TABLE Alumno(
     estado TINYINT(1) NOT NULL DEFAULT 1,
     certificado TINYINT(1) NOT NULL DEFAULT 0,
     url_certificado_medico VARCHAR(255),
+    eliminado_en DATETIME NULL,
     id_tutor INT NOT NULL,
     id_categoria INT NOT NULL,
     id_condicion INT NOT NULL,
@@ -104,6 +117,7 @@ CREATE TABLE Clase(
     hora_fin TIME NOT NULL,
     id_grupo INT NOT NULL,
     estado ENUM('pendiente', 'realizada', 'suspendida') NOT NULL DEFAULT 'pendiente',
+    eliminado_en DATETIME NULL,
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
 ) ENGINE=InnoDB;
 
@@ -112,6 +126,8 @@ CREATE TABLE Clase_Empleado(
     id_empleado INT NOT NULL,
     presente TINYINT(1) NOT NULL DEFAULT 0,
     rol VARCHAR(20) NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
     PRIMARY KEY (id_clase, id_empleado),
     FOREIGN KEY (id_clase) REFERENCES Clase(id_clase),
     FOREIGN KEY (id_empleado) REFERENCES Empleado(id_empleado)
@@ -131,7 +147,9 @@ CREATE TABLE Tipo_Membrecia(
     id_tipo_membrecia INT AUTO_INCREMENT PRIMARY KEY,
     tipo_membrecia VARCHAR(20) NOT NULL,
     frecuencia_semanal INT,
-    duracion_dias INT COMMENT 'Duración en días de la membresía (ej: 30 para mensual, 15 para quincenal)'
+    duracion_dias INT COMMENT 'Duración en días de la membresía (ej: 30 para mensual, 15 para quincenal)',
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE Precio_Membrecia(
@@ -140,6 +158,8 @@ CREATE TABLE Precio_Membrecia(
     fecha_fin_vigencia DATE,
     precio DECIMAL(10,2) NOT NULL,
     id_tipo_membrecia INT NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
     FOREIGN KEY (id_tipo_membrecia) REFERENCES Tipo_Membrecia(id_tipo_membrecia)
 ) ENGINE=InnoDB;
 
@@ -160,6 +180,8 @@ CREATE TABLE Detalle_Pago(
     fecha_detalle DATE NOT NULL,
     referencia_transferencia VARCHAR(50),
     id_pago INT NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
     FOREIGN KEY (id_pago) REFERENCES Pago(id_pago)
 ) ENGINE=InnoDB;
 
@@ -168,6 +190,7 @@ CREATE TABLE Membrecia(
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
     estado VARCHAR(10) NOT NULL,
+    eliminado_en DATETIME NULL,
     id_alumno INT NOT NULL,
     id_pago INT NOT NULL,
     id_tipo_membrecia INT NOT NULL,

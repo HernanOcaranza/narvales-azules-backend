@@ -42,6 +42,10 @@ const Alumno = sequelize.define('Alumno', {
     allowNull: false,
     defaultValue: 0
   },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   id_tutor: {
     type: DataTypes.INTEGER,
     allowNull: false,

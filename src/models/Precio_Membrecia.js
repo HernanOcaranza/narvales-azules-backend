@@ -28,6 +28,15 @@ const Precio_Membrecia = sequelize.define('Precio_Membrecia', {
       model: 'Tipo_Membrecia',
       key: 'id_tipo_membrecia'
     }
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Precio_Membrecia',

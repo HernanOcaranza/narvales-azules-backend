@@ -73,12 +73,15 @@ class MembreciaService {
 
   async getAllMembresias(filtros = {}) {
     try {
+      const { page = 1, limit = 10, ...filtrosRest } = filtros;
+      const offset = (page - 1) * limit;
+      
       // Validar y procesar filtros
       const filtrosProcesados = {};
 
       // Validar idAlumno
-      if (filtros.idAlumno !== undefined && filtros.idAlumno !== null && filtros.idAlumno !== '') {
-        const idAlumno = parseInt(filtros.idAlumno);
+      if (filtrosRest.idAlumno !== undefined && filtrosRest.idAlumno !== null && filtrosRest.idAlumno !== '') {
+        const idAlumno = parseInt(filtrosRest.idAlumno);
         if (isNaN(idAlumno)) {
           throw new Error('El filtro idAlumno debe ser un número válido');
         }
@@ -86,17 +89,17 @@ class MembreciaService {
       }
 
       // Validar estado
-      if (filtros.estado !== undefined && filtros.estado !== null && filtros.estado !== '') {
+      if (filtrosRest.estado !== undefined && filtrosRest.estado !== null && filtrosRest.estado !== '') {
         const estadosValidos = ['activa', 'vencida', 'suspendida', 'cancelada'];
-        if (!estadosValidos.includes(filtros.estado.toLowerCase())) {
+        if (!estadosValidos.includes(filtrosRest.estado.toLowerCase())) {
           throw new Error(`El filtro estado debe ser uno de: ${estadosValidos.join(', ')}`);
         }
-        filtrosProcesados.estado = filtros.estado.toLowerCase();
+        filtrosProcesados.estado = filtrosRest.estado.toLowerCase();
       }
 
       // Validar idTipoMembrecia
-      if (filtros.idTipoMembrecia !== undefined && filtros.idTipoMembrecia !== null && filtros.idTipoMembrecia !== '') {
-        const idTipoMembrecia = parseInt(filtros.idTipoMembrecia);
+      if (filtrosRest.idTipoMembrecia !== undefined && filtrosRest.idTipoMembrecia !== null && filtrosRest.idTipoMembrecia !== '') {
+        const idTipoMembrecia = parseInt(filtrosRest.idTipoMembrecia);
         if (isNaN(idTipoMembrecia)) {
           throw new Error('El filtro idTipoMembrecia debe ser un número válido');
         }
@@ -104,8 +107,8 @@ class MembreciaService {
       }
 
       // Validar idGrupo
-      if (filtros.idGrupo !== undefined && filtros.idGrupo !== null && filtros.idGrupo !== '') {
-        const idGrupo = parseInt(filtros.idGrupo);
+      if (filtrosRest.idGrupo !== undefined && filtrosRest.idGrupo !== null && filtrosRest.idGrupo !== '') {
+        const idGrupo = parseInt(filtrosRest.idGrupo);
         if (isNaN(idGrupo)) {
           throw new Error('El filtro idGrupo debe ser un número válido');
         }
@@ -113,31 +116,31 @@ class MembreciaService {
       }
 
       // Validar fechaDesde
-      if (filtros.fechaDesde !== undefined && filtros.fechaDesde !== null && filtros.fechaDesde !== '') {
-        const fechaDesde = new Date(filtros.fechaDesde);
+      if (filtrosRest.fechaDesde !== undefined && filtrosRest.fechaDesde !== null && filtrosRest.fechaDesde !== '') {
+        const fechaDesde = new Date(filtrosRest.fechaDesde);
         if (isNaN(fechaDesde.getTime())) {
           throw new Error('El filtro fechaDesde debe tener formato YYYY-MM-DD');
         }
         // Validar formato YYYY-MM-DD
         const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!fechaRegex.test(filtros.fechaDesde)) {
+        if (!fechaRegex.test(filtrosRest.fechaDesde)) {
           throw new Error('El filtro fechaDesde debe tener formato YYYY-MM-DD');
         }
-        filtrosProcesados.fechaDesde = filtros.fechaDesde;
+        filtrosProcesados.fechaDesde = filtrosRest.fechaDesde;
       }
 
       // Validar fechaHasta
-      if (filtros.fechaHasta !== undefined && filtros.fechaHasta !== null && filtros.fechaHasta !== '') {
-        const fechaHasta = new Date(filtros.fechaHasta);
+      if (filtrosRest.fechaHasta !== undefined && filtrosRest.fechaHasta !== null && filtrosRest.fechaHasta !== '') {
+        const fechaHasta = new Date(filtrosRest.fechaHasta);
         if (isNaN(fechaHasta.getTime())) {
           throw new Error('El filtro fechaHasta debe tener formato YYYY-MM-DD');
         }
         // Validar formato YYYY-MM-DD
         const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!fechaRegex.test(filtros.fechaHasta)) {
+        if (!fechaRegex.test(filtrosRest.fechaHasta)) {
           throw new Error('El filtro fechaHasta debe tener formato YYYY-MM-DD');
         }
-        filtrosProcesados.fechaHasta = filtros.fechaHasta;
+        filtrosProcesados.fechaHasta = filtrosRest.fechaHasta;
       }
 
       // Validar que fechaDesde no sea mayor que fechaHasta
@@ -147,7 +150,7 @@ class MembreciaService {
         }
       }
 
-      return await membresiaRepository.findAll(filtrosProcesados);
+      return await membresiaRepository.findAll({ ...filtrosProcesados, limit, offset });
     } catch (error) {
       throw new Error(`Error al obtener membresías: ${error.message}`);
     }

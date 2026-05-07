@@ -1,24 +1,79 @@
 import db from '../models/index.js';
 import { Op } from 'sequelize';
 
-const { Clase, Grupo } = db;
+const { Clase, Grupo, Disciplina, Categoria } = db;
 
 class ClaseRepository {
-  async findAll() {
-    return await Clase.findAll({
+  async findAll(options = {}) {
+    const { limit = 10, offset = 0, filters = {} } = options;
+
+    const where = { eliminado_en: null };
+    const grupoWhere = { estado: 1 };
+
+    if (filters.idGrupo) {
+      where.id_grupo = filters.idGrupo;
+    }
+
+    if (filters.estado) {
+      where.estado = filters.estado;
+    }
+
+    if (filters.fechaDesde) {
+      where.fecha_clase = {
+        ...where.fecha_clase,
+        [Op.gte]: filters.fechaDesde
+      };
+    }
+
+    if (filters.fechaHasta) {
+      where.fecha_clase = {
+        ...where.fecha_clase,
+        [Op.lte]: filters.fechaHasta
+      };
+    }
+
+    if (filters.idDisciplina || filters.idCategoria) {
+      if (filters.idDisciplina) {
+        grupoWhere.id_disciplina = filters.idDisciplina;
+      }
+      if (filters.idCategoria) {
+        grupoWhere.id_categoria = filters.idCategoria;
+      }
+    }
+
+    const { count, rows } = await Clase.findAndCountAll({
+      where,
       include: [
         {
           model: Grupo,
           as: 'grupo',
-          attributes: ['id_grupo', 'nombre', 'cupo_maximo', 'estado']
+          where: Object.keys(grupoWhere).length > 0 ? grupoWhere : undefined,
+          attributes: ['id_grupo', 'nombre', 'cupo_maximo', 'estado', 'id_disciplina', 'id_categoria'],
+          required: Object.keys(grupoWhere).length > 0,
+          include: [
+            {
+              model: Disciplina,
+              as: 'disciplina',
+              attributes: ['id_disciplina', 'disciplina']
+            },
+            {
+              model: Categoria,
+              as: 'categoria',
+              attributes: ['id_categoria', 'categoria']
+            }
+          ]
         }
       ],
-      order: [['fecha_clase', 'DESC'], ['hora_inicio', 'ASC']]
+      order: [['fecha_clase', 'DESC'], ['hora_inicio', 'ASC']],
+      limit,
+      offset
     });
+    return { data: rows, total: count };
   }
 
   async findById(id) {
-    return await Clase.findByPk(id, {
+    return await Clase.findOne({
+      where: { id_clase: id, eliminado_en: null },
       include: [
         {
           model: Grupo,
@@ -31,7 +86,7 @@ class ClaseRepository {
 
   async findByGrupo(idGrupo) {
     return await Clase.findAll({
-      where: { id_grupo: idGrupo },
+      where: { id_grupo: idGrupo, eliminado_en: null },
       include: [
         {
           model: Grupo,
@@ -45,7 +100,7 @@ class ClaseRepository {
 
   async findByFecha(fecha) {
     return await Clase.findAll({
-      where: { fecha_clase: fecha },
+      where: { fecha_clase: fecha, eliminado_en: null },
       include: [
         {
           model: Grupo,
@@ -62,7 +117,8 @@ class ClaseRepository {
       where: {
         fecha_clase: {
           [Op.between]: [fechaInicio, fechaFin]
-        }
+        },
+        eliminado_en: null
       },
       include: [
         {
@@ -80,7 +136,7 @@ class ClaseRepository {
   }
 
   async update(id, data) {
-    const clase = await Clase.findByPk(id);
+    const clase = await Clase.findOne({ where: { id_clase: id, eliminado_en: null } });
     if (!clase) {
       return null;
     }
@@ -88,11 +144,11 @@ class ClaseRepository {
   }
 
   async delete(id) {
-    const clase = await Clase.findByPk(id);
+    const clase = await Clase.findOne({ where: { id_clase: id, eliminado_en: null } });
     if (!clase) {
       return false;
     }
-    await clase.destroy();
+    await clase.update({ eliminado_en: new Date() });
     return true;
   }
 

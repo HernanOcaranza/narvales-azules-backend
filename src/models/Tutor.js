@@ -27,6 +27,15 @@ const Tutor = sequelize.define('Tutor', {
   fecha_registro: {
     type: DataTypes.DATEONLY,
     allowNull: false
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Tutor',

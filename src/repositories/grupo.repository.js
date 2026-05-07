@@ -5,6 +5,7 @@ const { Grupo, Disciplina, Categoria, GrupoHorario } = db;
 class GrupoRepository {
   async findAll() {
     return await Grupo.findAll({
+      where: { estado: 1 },
       include: [
         {
           model: Disciplina,
@@ -28,7 +29,8 @@ class GrupoRepository {
   }
 
   async findById(id) {
-    return await Grupo.findByPk(id, {
+    return await Grupo.findOne({
+      where: { id_grupo: id, estado: 1 },
       include: [
         {
           model: Disciplina,
@@ -52,13 +54,13 @@ class GrupoRepository {
 
   async findByNombre(nombre) {
     return await Grupo.findOne({ 
-      where: { nombre } 
+      where: { nombre, estado: 1 } 
     });
   }
 
   async findByDisciplina(id_disciplina) {
     return await Grupo.findAll({
-      where: { id_disciplina },
+      where: { id_disciplina, estado: 1 },
       include: [
         {
           model: Disciplina,
@@ -82,7 +84,7 @@ class GrupoRepository {
 
   async findByCategoria(id_categoria) {
     return await Grupo.findAll({
-      where: { id_categoria },
+      where: { id_categoria, estado: 1 },
       include: [
         {
           model: Disciplina,
@@ -109,7 +111,7 @@ class GrupoRepository {
   }
 
   async update(id, data) {
-    const grupo = await Grupo.findByPk(id);
+    const grupo = await Grupo.findOne({ where: { id_grupo: id, estado: 1 } });
     if (!grupo) {
       return null;
     }
@@ -117,11 +119,11 @@ class GrupoRepository {
   }
 
   async delete(id) {
-    const grupo = await Grupo.findByPk(id);
+    const grupo = await Grupo.findOne({ where: { id_grupo: id, estado: 1 } });
     if (!grupo) {
       return false;
     }
-    await grupo.destroy();
+    await grupo.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

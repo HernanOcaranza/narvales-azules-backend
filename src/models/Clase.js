@@ -33,6 +33,10 @@ const Clase = sequelize.define('Clase', {
     type: DataTypes.ENUM('pendiente', 'realizada', 'suspendida'),
     allowNull: false,
     defaultValue: 'pendiente'
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Clase',

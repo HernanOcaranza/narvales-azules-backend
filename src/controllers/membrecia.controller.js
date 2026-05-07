@@ -4,8 +4,13 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class MembreciaController {
   async getAll(req, res) {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      
       // Extraer filtros de los query parameters
       const filtros = {
+        page,
+        limit,
         idAlumno: req.query.idAlumno,
         estado: req.query.estado,
         idTipoMembrecia: req.query.idTipoMembrecia,
@@ -14,8 +19,16 @@ class MembreciaController {
         fechaHasta: req.query.fechaHasta
       };
 
-      const membresias = await membresiaService.getAllMembresias(filtros);
-      return successResponse(res, membresias, 'Membresías obtenidas correctamente');
+      const result = await membresiaService.getAllMembresias(filtros);
+      return successResponse(res, {
+        data: result.data,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      }, 'Membresías obtenidas correctamente');
     } catch (error) {
       // Determinar código de estado según el tipo de error
       const statusCode = error.message.includes('debe ser') || 

@@ -19,6 +19,15 @@ const Condicion = sequelize.define('Condicion', {
   descripcion: {
     type: DataTypes.STRING(100),
     allowNull: true
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Condicion',

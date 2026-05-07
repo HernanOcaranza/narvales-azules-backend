@@ -5,23 +5,26 @@ const { Empleado } = db;
 class EmpleadoRepository {
   async findAll() {
     return await Empleado.findAll({
+      where: { estado: 1 },
       order: [['apellido', 'ASC'], ['nombre', 'ASC']]
     });
   }
 
   async findById(id) {
-    return await Empleado.findByPk(id);
+    return await Empleado.findOne({
+      where: { id_empleado: id, estado: 1 }
+    });
   }
 
   async findByUsuario(usuario) {
     return await Empleado.findOne({ 
-      where: { usuario } 
+      where: { usuario, estado: 1 } 
     });
   }
 
   async findByDni(dni) {
     return await Empleado.findOne({ 
-      where: { dni } 
+      where: { dni, estado: 1 } 
     });
   }
 
@@ -30,7 +33,7 @@ class EmpleadoRepository {
   }
 
   async update(id, data) {
-    const empleado = await Empleado.findByPk(id);
+    const empleado = await Empleado.findOne({ where: { id_empleado: id, estado: 1 } });
     if (!empleado) {
       return null;
     }
@@ -38,11 +41,11 @@ class EmpleadoRepository {
   }
 
   async delete(id) {
-    const empleado = await Empleado.findByPk(id);
+    const empleado = await Empleado.findOne({ where: { id_empleado: id, estado: 1 } });
     if (!empleado) {
       return false;
     }
-    await empleado.destroy();
+    await empleado.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

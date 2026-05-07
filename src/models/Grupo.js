@@ -21,6 +21,10 @@ const Grupo = sequelize.define('Grupo', {
     allowNull: false,
     defaultValue: 1
   },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   id_disciplina: {
     type: DataTypes.INTEGER,
     allowNull: false,

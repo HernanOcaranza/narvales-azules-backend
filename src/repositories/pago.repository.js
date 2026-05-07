@@ -1,28 +1,37 @@
 import db from '../models/index.js';
+import { Op } from 'sequelize';
 
 const { Pago, Empleado, Detalle_Pago, Membrecia } = db;
 
 class PagoRepository {
-  async findAll() {
-    return await Pago.findAll({
+  async findAll(options = {}) {
+    const { limit = 10, offset = 0 } = options;
+    const { count, rows } = await Pago.findAndCountAll({
+      where: { estado: { [Op.ne]: 'eliminado' } },
       include: [
         {
           model: Empleado,
           as: 'empleado',
+          where: { estado: 1 },
           required: false
         },
         {
           model: Detalle_Pago,
           as: 'detalles',
+          where: { estado: 1 },
           required: false
         }
       ],
-      order: [['fecha_pago', 'DESC']]
+      order: [['fecha_pago', 'DESC']],
+      limit,
+      offset
     });
+    return { data: rows, total: count };
   }
 
   async findById(id) {
-    return await Pago.findByPk(id, {
+    return await Pago.findOne({
+      where: { id_pago: id, estado: { [Op.ne]: 'eliminado' } },
       include: [
         {
           model: Empleado,
@@ -45,7 +54,7 @@ class PagoRepository {
 
   async findByTipo(tipo) {
     return await Pago.findAll({
-      where: { tipo },
+      where: { tipo, estado: { [Op.ne]: 'eliminado' } },
       include: [
         {
           model: Empleado,
@@ -69,7 +78,7 @@ class PagoRepository {
 
   async update(id, data, transaction = null) {
     const options = transaction ? { transaction } : {};
-    const pago = await Pago.findByPk(id, options);
+    const pago = await Pago.findOne({ where: { id_pago: id, estado: { [Op.ne]: 'eliminado' } }, ...options });
     if (!pago) {
       return null;
     }
@@ -78,11 +87,11 @@ class PagoRepository {
 
   async delete(id, transaction = null) {
     const options = transaction ? { transaction } : {};
-    const pago = await Pago.findByPk(id, options);
+    const pago = await Pago.findOne({ where: { id_pago: id, estado: { [Op.ne]: 'eliminado' } }, ...options });
     if (!pago) {
       return false;
     }
-    await pago.destroy(options);
+    await pago.update({ estado: 'eliminado' }, options);
     return true;
   }
 }

@@ -5,10 +5,12 @@ const { Tipo_Membrecia, Precio_Membrecia } = db;
 class TipoMembreciaRepository {
   async findAll() {
     return await Tipo_Membrecia.findAll({
+      where: { estado: 1 },
       include: [
         {
           model: Precio_Membrecia,
           as: 'precios',
+          where: { estado: 1 },
           required: false
         }
       ],
@@ -17,11 +19,13 @@ class TipoMembreciaRepository {
   }
 
   async findById(id) {
-    return await Tipo_Membrecia.findByPk(id, {
+    return await Tipo_Membrecia.findOne({
+      where: { id_tipo_membrecia: id, estado: 1 },
       include: [
         {
           model: Precio_Membrecia,
           as: 'precios',
+          where: { estado: 1 },
           required: false
         }
       ]
@@ -33,7 +37,7 @@ class TipoMembreciaRepository {
   }
 
   async update(id, data) {
-    const tipo = await Tipo_Membrecia.findByPk(id);
+    const tipo = await Tipo_Membrecia.findOne({ where: { id_tipo_membrecia: id, estado: 1 } });
     if (!tipo) {
       return null;
     }
@@ -41,11 +45,11 @@ class TipoMembreciaRepository {
   }
 
   async delete(id) {
-    const tipo = await Tipo_Membrecia.findByPk(id);
+    const tipo = await Tipo_Membrecia.findOne({ where: { id_tipo_membrecia: id, estado: 1 } });
     if (!tipo) {
       return false;
     }
-    await tipo.destroy();
+    await tipo.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

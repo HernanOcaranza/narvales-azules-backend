@@ -4,8 +4,26 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class AlumnoController {
   async getAll(req, res) {
     try {
-      const alumnos = await alumnoService.getAllAlumnos();
-      return successResponse(res, alumnos, 'Alumnos obtenidos correctamente');
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const filters = {};
+      if (req.query.idTutor) filters.idTutor = parseInt(req.query.idTutor);
+      if (req.query.idCategoria) filters.idCategoria = parseInt(req.query.idCategoria);
+      if (req.query.idCondicion) filters.idCondicion = parseInt(req.query.idCondicion);
+      if (req.query.estado) filters.estado = req.query.estado;
+      if (req.query.certificado) filters.certificado = req.query.certificado;
+
+      const result = await alumnoService.getAllAlumnos({ page, limit, filters });
+      return successResponse(res, {
+        data: result.data,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      }, 'Alumnos obtenidos correctamente');
     } catch (error) {
       return errorResponse(res, error.message, 500);
     }

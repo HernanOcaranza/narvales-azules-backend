@@ -5,17 +5,20 @@ const { Disciplina } = db;
 class DisciplinaRepository {
   async findAll() {
     return await Disciplina.findAll({
+      where: { estado: 1 },
       order: [['disciplina', 'ASC']]
     });
   }
 
   async findById(id) {
-    return await Disciplina.findByPk(id);
+    return await Disciplina.findOne({
+      where: { id_disciplina: id, estado: 1 }
+    });
   }
 
   async findByDisciplina(disciplina) {
     return await Disciplina.findOne({ 
-      where: { disciplina } 
+      where: { disciplina, estado: 1 } 
     });
   }
 
@@ -24,7 +27,7 @@ class DisciplinaRepository {
   }
 
   async update(id, data) {
-    const disciplina = await Disciplina.findByPk(id);
+    const disciplina = await Disciplina.findOne({ where: { id_disciplina: id, estado: 1 } });
     if (!disciplina) {
       return null;
     }
@@ -32,11 +35,11 @@ class DisciplinaRepository {
   }
 
   async delete(id) {
-    const disciplina = await Disciplina.findByPk(id);
+    const disciplina = await Disciplina.findOne({ where: { id_disciplina: id, estado: 1 } });
     if (!disciplina) {
       return false;
     }
-    await disciplina.destroy();
+    await disciplina.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

@@ -4,9 +4,11 @@ import db from '../models/index.js';
 const { Grupo } = db;
 
 class ClaseService {
-  async getAllClases() {
+  async getAllClases(options = {}) {
     try {
-      return await claseRepository.findAll();
+      const { page = 1, limit = 10, filters = {} } = options;
+      const offset = (page - 1) * limit;
+      return await claseRepository.findAll({ limit, offset, filters });
     } catch (error) {
       throw new Error(`Error al obtener clases: ${error.message}`);
     }

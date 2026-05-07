@@ -45,6 +45,10 @@ const Empleado = sequelize.define('Empleado', {
     type: DataTypes.TINYINT(1),
     allowNull: false,
     defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Empleado',

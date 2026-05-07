@@ -5,6 +5,7 @@ const { Detalle_Pago, Pago } = db;
 class DetallePagoRepository {
   async findAll() {
     return await Detalle_Pago.findAll({
+      where: { estado: 1 },
       include: [
         {
           model: Pago,
@@ -17,7 +18,8 @@ class DetallePagoRepository {
   }
 
   async findById(id) {
-    return await Detalle_Pago.findByPk(id, {
+    return await Detalle_Pago.findOne({
+      where: { id_detalle_pago: id, estado: 1 },
       include: [
         {
           model: Pago,
@@ -31,7 +33,7 @@ class DetallePagoRepository {
   async findByPagoId(idPago, transaction = null) {
     const options = transaction ? { transaction } : {};
     return await Detalle_Pago.findAll({
-      where: { id_pago: idPago },
+      where: { id_pago: idPago, estado: 1 },
       include: [
         {
           model: Pago,
@@ -51,7 +53,7 @@ class DetallePagoRepository {
 
   async update(id, data, transaction = null) {
     const options = transaction ? { transaction } : {};
-    const detalle = await Detalle_Pago.findByPk(id, options);
+    const detalle = await Detalle_Pago.findOne({ where: { id_detalle_pago: id, estado: 1 }, ...options });
     if (!detalle) {
       return null;
     }
@@ -60,11 +62,11 @@ class DetallePagoRepository {
 
   async delete(id, transaction = null) {
     const options = transaction ? { transaction } : {};
-    const detalle = await Detalle_Pago.findByPk(id, options);
+    const detalle = await Detalle_Pago.findOne({ where: { id_detalle_pago: id, estado: 1 }, ...options });
     if (!detalle) {
       return false;
     }
-    await detalle.destroy(options);
+    await detalle.update({ estado: 0, eliminado_en: new Date() }, options);
     return true;
   }
 }

@@ -5,17 +5,20 @@ const { Categoria } = db;
 class CategoriaRepository {
   async findAll() {
     return await Categoria.findAll({
+      where: { estado: 1 },
       order: [['categoria', 'ASC']]
     });
   }
 
   async findById(id) {
-    return await Categoria.findByPk(id);
+    return await Categoria.findOne({
+      where: { id_categoria: id, estado: 1 }
+    });
   }
 
   async findByCategoria(categoria) {
     return await Categoria.findOne({ 
-      where: { categoria } 
+      where: { categoria, estado: 1 } 
     });
   }
 
@@ -24,7 +27,7 @@ class CategoriaRepository {
   }
 
   async update(id, data) {
-    const categoria = await Categoria.findByPk(id);
+    const categoria = await Categoria.findOne({ where: { id_categoria: id, estado: 1 } });
     if (!categoria) {
       return null;
     }
@@ -32,11 +35,11 @@ class CategoriaRepository {
   }
 
   async delete(id) {
-    const categoria = await Categoria.findByPk(id);
+    const categoria = await Categoria.findOne({ where: { id_categoria: id, estado: 1 } });
     if (!categoria) {
       return false;
     }
-    await categoria.destroy();
+    await categoria.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 }

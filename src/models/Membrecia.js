@@ -20,6 +20,10 @@ const Membrecia = sequelize.define('Membrecia', {
     type: DataTypes.STRING(10),
     allowNull: false
   },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   id_alumno: {
     type: DataTypes.INTEGER,
     allowNull: false,

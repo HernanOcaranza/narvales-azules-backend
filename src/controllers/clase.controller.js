@@ -5,8 +5,27 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class ClaseController {
   async getAll(req, res) {
     try {
-      const clases = await claseService.getAllClases();
-      return successResponse(res, clases, 'Clases obtenidas correctamente');
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const filters = {};
+      if (req.query.idGrupo) filters.idGrupo = parseInt(req.query.idGrupo);
+      if (req.query.idDisciplina) filters.idDisciplina = parseInt(req.query.idDisciplina);
+      if (req.query.idCategoria) filters.idCategoria = parseInt(req.query.idCategoria);
+      if (req.query.estado) filters.estado = req.query.estado;
+      if (req.query.fechaDesde) filters.fechaDesde = req.query.fechaDesde;
+      if (req.query.fechaHasta) filters.fechaHasta = req.query.fechaHasta;
+
+      const result = await claseService.getAllClases({ page, limit, filters });
+      return successResponse(res, {
+        data: result.data,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      }, 'Clases obtenidas correctamente');
     } catch (error) {
       return errorResponse(res, error.message, 500);
     }

@@ -4,8 +4,33 @@ import { Op } from 'sequelize';
 const { Alumno, Tutor, Categoria, Condicion, Membrecia, Tipo_Membrecia, Grupo, Disciplina, Pago, Detalle_Pago } = db;
 
 class AlumnoRepository {
-  async findAll() {
-    return await Alumno.findAll({
+  async findAll(options = {}) {
+    const { limit = 10, offset = 0, filters = {} } = options;
+
+    const where = { estado: 1 };
+
+    if (filters.idTutor) {
+      where.id_tutor = filters.idTutor;
+    }
+
+    if (filters.idCategoria) {
+      where.id_categoria = filters.idCategoria;
+    }
+
+    if (filters.idCondicion) {
+      where.id_condicion = filters.idCondicion;
+    }
+
+    if (filters.estado !== undefined && filters.estado !== '') {
+      where.estado = parseInt(filters.estado);
+    }
+
+    if (filters.certificado !== undefined && filters.certificado !== '') {
+      where.certificado = parseInt(filters.certificado);
+    }
+
+    const { count, rows } = await Alumno.findAndCountAll({
+      where,
       include: [
         {
           model: Tutor,
@@ -55,12 +80,16 @@ class AlumnoRepository {
           order: [['fecha_inicio', 'DESC']]
         }
       ],
-      order: [['apellido', 'ASC'], ['nombre', 'ASC']]
+      order: [['apellido', 'ASC'], ['nombre', 'ASC']],
+      limit,
+      offset
     });
+    return { data: rows, total: count };
   }
 
   async findById(id) {
-    return await Alumno.findByPk(id, {
+    return await Alumno.findOne({
+      where: { id_alumno: id, estado: 1 },
       include: [
         {
           model: Tutor,
@@ -83,13 +112,13 @@ class AlumnoRepository {
 
   async findByDni(dni) {
     return await Alumno.findOne({ 
-      where: { dni } 
+      where: { dni, estado: 1 } 
     });
   }
 
   async findByTutor(idTutor) {
     return await Alumno.findAll({
-      where: { id_tutor: idTutor },
+      where: { id_tutor: idTutor, estado: 1 },
       include: [
         {
           model: Categoria,
@@ -112,7 +141,8 @@ class AlumnoRepository {
         [Op.or]: [
           { nombre: { [Op.like]: `%${nombre}%` } },
           { apellido: { [Op.like]: `%${nombre}%` } }
-        ]
+        ],
+        estado: 1
       },
       include: [
         {
@@ -148,16 +178,18 @@ class AlumnoRepository {
   }
 
   async delete(id) {
-    const alumno = await Alumno.findByPk(id);
+    const alumno = await Alumno.findOne({ where: { id_alumno: id, estado: 1 } });
     if (!alumno) {
       return false;
     }
-    await alumno.destroy();
+    await alumno.update({ estado: 0, eliminado_en: new Date() });
     return true;
   }
 
   async findByIdWithAllDetails(id) {
-    return await Alumno.findByPk(id, {
+    return await Alumno.findOne({
+      where: { id_alumno: id, estado: 1 },
+      attributes: ['id_alumno', 'nombre', 'apellido', 'dni', 'fecha_nacimiento', 'direccion', 'fecha_registro', 'estado', 'certificado'],
       attributes: ['id_alumno', 'nombre', 'apellido', 'dni', 'fecha_nacimiento', 'direccion', 'fecha_registro', 'estado', 'certificado'],
       include: [
         {

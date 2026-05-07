@@ -21,6 +21,15 @@ const Tipo_Membrecia = sequelize.define('Tipo_Membrecia', {
     allowNull: true,
     field: 'duracion_dias',
     comment: 'Duración en días de la membresía (ej: 30 para mensual, 15 para quincenal)'
+  },
+  estado: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 1
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Tipo_Membrecia',

@@ -35,12 +35,12 @@ class DashboardService {
           FROM Pago p
           WHERE p.tipo = 'ingreso' AND p.estado = 'parcial'
         `, { type: db.Sequelize.QueryTypes.SELECT }),
-        Clase.count({ where: { fecha_clase: hoyStr } }),
+        Clase.count({ where: { fecha_clase: hoyStr, eliminado_en: null } }),
         Grupo.count({ where: { estado: 1 } }),
-        Tutor.count(),
+        Tutor.count({ where: { estado: 1 } }),
         Empleado.count({ where: { estado: 1 } }),
-        Disciplina.findAll(),
-        Categoria.findAll(),
+        Disciplina.findAll({ where: { estado: 1 } }),
+        Categoria.findAll({ where: { estado: 1 } }),
       ]);
 
       const membresiasActivas = membresiasActivasRes[0]?.total || 0;
@@ -180,14 +180,17 @@ class DashboardService {
 
   async getUltimasMembresias(limit) {
     return await Membrecia.findAll({
+      where: { eliminado_en: null },
       include: [
-        { model: Alumno, as: 'alumno', attributes: ['nombre', 'apellido'] },
-        { model: Tipo_Membrecia, as: 'tipo_membrecia', attributes: ['tipo_membrecia'] },
+        { model: Alumno, as: 'alumno', where: { estado: 1 }, attributes: ['nombre', 'apellido'], required: false },
+        { model: Tipo_Membrecia, as: 'tipo_membrecia', where: { estado: 1 }, attributes: ['tipo_membrecia'], required: false },
         { 
           model: Grupo, 
           as: 'grupo', 
+          where: { estado: 1 },
           attributes: ['nombre'],
-          include: [{ model: Disciplina, as: 'disciplina', attributes: ['disciplina'] }],
+          include: [{ model: Disciplina, as: 'disciplina', where: { estado: 1 }, attributes: ['disciplina'], required: false }],
+          required: false
         },
       ],
       order: [['fecha_inicio', 'DESC']],
@@ -201,14 +204,17 @@ class DashboardService {
     return await Clase.findAll({
       where: {
         fecha_clase: { [Op.gte]: hoy },
+        eliminado_en: null
       },
       include: [{
         model: Grupo,
         as: 'grupo',
+        where: { estado: 1 },
         attributes: ['nombre', 'cupo_maximo'],
+        required: false,
         include: [
-          { model: Disciplina, as: 'disciplina', attributes: ['disciplina'] },
-          { model: Categoria, as: 'categoria', attributes: ['categoria'] },
+          { model: Disciplina, as: 'disciplina', where: { estado: 1 }, attributes: ['disciplina'], required: false },
+          { model: Categoria, as: 'categoria', where: { estado: 1 }, attributes: ['categoria'], required: false },
         ],
       }],
       order: [['fecha_clase', 'ASC'], ['hora_inicio', 'ASC']],
@@ -254,11 +260,13 @@ class DashboardService {
 
   async getPagosRecientes(limit) {
     return await Pago.findAll({
-      where: { tipo: 'ingreso' },
+      where: { tipo: 'ingreso', estado: { [Op.ne]: 'eliminado' } },
       include: [{
         model: Membrecia,
         as: 'membresia',
-        include: [{ model: Alumno, as: 'alumno', attributes: ['nombre', 'apellido'] }],
+        where: { eliminado_en: null },
+        required: false,
+        include: [{ model: Alumno, as: 'alumno', where: { estado: 1 }, attributes: ['nombre', 'apellido'], required: false }],
       }],
       order: [['fecha_pago', 'DESC']],
       limit,

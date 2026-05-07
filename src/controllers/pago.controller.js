@@ -4,16 +4,27 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class PagoController {
   async getAll(req, res) {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
       const { tipo } = req.query;
-      let pagos;
+      let result;
       
       if (tipo) {
-        pagos = await pagoService.getPagosByTipo(tipo);
+        const pagos = await pagoService.getPagosByTipo(tipo);
+        result = { data: pagos, total: pagos.length };
       } else {
-        pagos = await pagoService.getAllPagos();
+        result = await pagoService.getAllPagos({ page, limit });
       }
       
-      return successResponse(res, pagos, 'Pagos obtenidos correctamente');
+      return successResponse(res, {
+        data: result.data,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      }, 'Pagos obtenidos correctamente');
     } catch (error) {
       return errorResponse(res, error.message, 500);
     }

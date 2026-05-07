@@ -3,9 +3,11 @@ import detallePagoRepository from '../repositories/detalle_pago.repository.js';
 import membresiaRepository from '../repositories/membrecia.repository.js';
 
 class PagoService {
-  async getAllPagos() {
+  async getAllPagos(options = {}) {
     try {
-      return await pagoRepository.findAll();
+      const { page = 1, limit = 10 } = options;
+      const offset = (page - 1) * limit;
+      return await pagoRepository.findAll({ limit, offset });
     } catch (error) {
       throw new Error(`Error al obtener pagos: ${error.message}`);
     }
