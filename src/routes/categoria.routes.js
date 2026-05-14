@@ -1,18 +1,17 @@
 import express from 'express';
 import categoriaController from '../controllers/categoria.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAnyRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/categoria.yaml
-router.get('/', categoriaController.getAll.bind(categoriaController));
-router.get('/:id', categoriaController.getById.bind(categoriaController));
-router.post('/', categoriaController.create.bind(categoriaController));
-router.put('/:id', categoriaController.update.bind(categoriaController));
-router.delete('/:id', categoriaController.delete.bind(categoriaController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/', requireAnyRole, categoriaController.getAll.bind(categoriaController));
+router.get('/:id', requireAnyRole, categoriaController.getById.bind(categoriaController));
+router.post('/', requireAdmin, categoriaController.create.bind(categoriaController));
+router.put('/:id', requireAdmin, categoriaController.update.bind(categoriaController));
+router.delete('/:id', requireAdmin, categoriaController.delete.bind(categoriaController));
 
 export default router;
 

@@ -1,11 +1,34 @@
 import db from '../models/index.js';
+import { Op } from 'sequelize';
 
 const { Grupo, Disciplina, Categoria, GrupoHorario } = db;
 
 class GrupoRepository {
-  async findAll() {
-    return await Grupo.findAll({
-      where: { estado: 1 },
+  async findAll(options = {}) {
+    const { limit = 10, offset = 0, filters = {} } = options;
+
+    const where = {};
+
+    if (filters.estado !== undefined && filters.estado !== '') {
+      where.estado = parseInt(filters.estado);
+    } else {
+      where.estado = 1;
+    }
+
+    if (filters.idDisciplina) {
+      where.id_disciplina = filters.idDisciplina;
+    }
+
+    if (filters.idCategoria) {
+      where.id_categoria = filters.idCategoria;
+    }
+
+    if (filters.nombre) {
+      where.nombre = { [Op.like]: `%${filters.nombre}%` };
+    }
+
+    const { count, rows } = await Grupo.findAndCountAll({
+      where,
       include: [
         {
           model: Disciplina,
@@ -24,8 +47,11 @@ class GrupoRepository {
           required: false
         }
       ],
-      order: [['nombre', 'ASC']]
+      order: [['nombre', 'ASC']],
+      limit,
+      offset
     });
+    return { data: rows, total: count };
   }
 
   async findById(id) {

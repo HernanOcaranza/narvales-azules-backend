@@ -1,18 +1,17 @@
 import express from 'express';
 import condicionController from '../controllers/condicion.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAnyRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/condicion.yaml
-router.get('/', condicionController.getAll.bind(condicionController));
-router.get('/:id', condicionController.getById.bind(condicionController));
-router.post('/', condicionController.create.bind(condicionController));
-router.put('/:id', condicionController.update.bind(condicionController));
-router.delete('/:id', condicionController.delete.bind(condicionController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/', requireAnyRole, condicionController.getAll.bind(condicionController));
+router.get('/:id', requireAnyRole, condicionController.getById.bind(condicionController));
+router.post('/', requireAdmin, condicionController.create.bind(condicionController));
+router.put('/:id', requireAdmin, condicionController.update.bind(condicionController));
+router.delete('/:id', requireAdmin, condicionController.delete.bind(condicionController));
 
 export default router;
 
