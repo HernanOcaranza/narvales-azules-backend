@@ -6,9 +6,11 @@ import db from '../models/index.js';
 const { Disciplina, Categoria } = db;
 
 class GrupoService {
-  async getAllGrupos() {
+  async getAllGrupos(options = {}) {
     try {
-      return await grupoRepository.findAll();
+      const { page = 1, limit = 10, filters = {} } = options;
+      const offset = (page - 1) * limit;
+      return await grupoRepository.findAll({ limit, offset, filters });
     } catch (error) {
       throw new Error(`Error al obtener grupos: ${error.message}`);
     }

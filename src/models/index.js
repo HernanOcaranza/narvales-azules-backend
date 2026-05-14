@@ -17,6 +17,7 @@ import Detalle_Pago from './Detalle_Pago.js';
 import Tipo_Membrecia from './Tipo_Membrecia.js';
 import Precio_Membrecia from './Precio_Membrecia.js';
 import Membrecia from './Membrecia.js';
+import Asistencia from './Asistencia.js';
 
 // Inicializar relaciones
 Categoria.hasMany(Grupo, { foreignKey: 'id_categoria', as: 'grupos' });
@@ -76,6 +77,12 @@ Membrecia.belongsTo(Tipo_Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'tipo
 Grupo.hasMany(Membrecia, { foreignKey: 'id_grupo', as: 'membresias' });
 Membrecia.belongsTo(Grupo, { foreignKey: 'id_grupo', as: 'grupo' });
 
+// Relaciones de Asistencia
+Clase.hasMany(Asistencia, { foreignKey: 'id_clase', as: 'asistencias' });
+Asistencia.belongsTo(Clase, { foreignKey: 'id_clase', as: 'clase' });
+Alumno.hasMany(Asistencia, { foreignKey: 'id_alumno', as: 'asistencias' });
+Asistencia.belongsTo(Alumno, { foreignKey: 'id_alumno', as: 'alumno' });
+
 const db = {
   sequelize,
   Sequelize,
@@ -95,6 +102,7 @@ const db = {
   Tipo_Membrecia,
   Precio_Membrecia,
   Membrecia,
+  Asistencia,
 };
 
 export default db;

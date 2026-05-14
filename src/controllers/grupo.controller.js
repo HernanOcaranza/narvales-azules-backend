@@ -4,8 +4,25 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class GrupoController {
   async getAll(req, res) {
     try {
-      const grupos = await grupoService.getAllGrupos();
-      return successResponse(res, grupos, 'Grupos obtenidos correctamente');
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const filters = {};
+      if (req.query.idDisciplina) filters.idDisciplina = parseInt(req.query.idDisciplina);
+      if (req.query.idCategoria) filters.idCategoria = parseInt(req.query.idCategoria);
+      if (req.query.estado !== undefined && req.query.estado !== '') filters.estado = req.query.estado;
+      if (req.query.nombre) filters.nombre = req.query.nombre;
+
+      const result = await grupoService.getAllGrupos({ page, limit, filters });
+      return successResponse(res, {
+        data: result.data,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      }, 'Grupos obtenidos correctamente');
     } catch (error) {
       return errorResponse(res, error.message, 500);
     }

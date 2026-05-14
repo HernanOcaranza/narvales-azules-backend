@@ -1,18 +1,17 @@
 import express from 'express';
 import disciplinaController from '../controllers/disciplina.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAnyRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/disciplina.yaml
-router.get('/', disciplinaController.getAll.bind(disciplinaController));
-router.get('/:id', disciplinaController.getById.bind(disciplinaController));
-router.post('/', disciplinaController.create.bind(disciplinaController));
-router.put('/:id', disciplinaController.update.bind(disciplinaController));
-router.delete('/:id', disciplinaController.delete.bind(disciplinaController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/', requireAnyRole, disciplinaController.getAll.bind(disciplinaController));
+router.get('/:id', requireAnyRole, disciplinaController.getById.bind(disciplinaController));
+router.post('/', requireAdmin, disciplinaController.create.bind(disciplinaController));
+router.put('/:id', requireAdmin, disciplinaController.update.bind(disciplinaController));
+router.delete('/:id', requireAdmin, disciplinaController.delete.bind(disciplinaController));
 
 export default router;
 
