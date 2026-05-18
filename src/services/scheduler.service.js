@@ -12,21 +12,21 @@ class SchedulerService {
    * Inicializa todas las tareas programadas
    */
   iniciar() {
-    console.log('🕐 Iniciando tareas programadas...');
+    console.log('Iniciando tareas programadas...');
 
     // Tarea: Generar clases el día 1 de cada mes a las 00:00
     // Cron: '0 0 1 * *' = minuto 0, hora 0, día 1, cualquier mes, cualquier día de la semana
     const generarClasesMensual = cron.schedule('0 0 1 * *', async () => {
-      console.log('📅 Ejecutando tarea programada: Generar clases del mes...');
+      console.log('Ejecutando tarea programada: Generar clases del mes...');
       try {
         const resultado = await claseGeneratorService.generarClasesTodosLosGrupos();
-        console.log('✅ Clases generadas correctamente:', {
+        console.log('Clases generadas correctamente:', {
           gruposProcesados: resultado.gruposProcesados,
           totalClasesCreadas: resultado.totalClasesCreadas,
           gruposConError: resultado.gruposConError
         });
       } catch (error) {
-        console.error('❌ Error al generar clases automáticamente:', error.message);
+        console.error('Error al generar clases automáticamente:', error.message);
       }
     }, {
       scheduled: false, // No iniciar automáticamente
@@ -42,14 +42,14 @@ class SchedulerService {
     // Tarea: Actualizar estados de clases finalizadas cada 15 minutos
     // Cron: '*/15 * * * *' = cada 15 minutos
     const actualizarEstadosClases = cron.schedule('*/15 * * * *', async () => {
-      console.log('🔄 Ejecutando tarea programada: Actualizar estados de clases finalizadas...');
+      console.log('Ejecutando tarea programada: Actualizar estados de clases finalizadas...');
       try {
         const resultado = await claseService.actualizarEstadosAutomaticamente();
         if (resultado.clasesActualizadas > 0) {
-          console.log(`✅ ${resultado.mensaje}`);
+          console.log(resultado.mensaje);
         }
       } catch (error) {
-        console.error('❌ Error al actualizar estados de clases automáticamente:', error.message);
+        console.error('Error al actualizar estados de clases automáticamente:', error.message);
       }
     }, {
       scheduled: false, // No iniciar automáticamente
@@ -69,10 +69,10 @@ class SchedulerService {
       try {
         const resultado = await membresiaService.actualizarEstadosAutomaticamente();
         if (resultado.membresiasActualizadas > 0) {
-          console.log(`✅ ${resultado.mensaje}`);
+          console.log(resultado.mensaje);
         }
       } catch (error) {
-        console.error('❌ Error al actualizar estados de membresías automáticamente:', error.message);
+        console.error('Error al actualizar estados de membresías automáticamente:', error.message);
       }
     }, {
       scheduled: false, // No iniciar automáticamente
@@ -88,36 +88,36 @@ class SchedulerService {
     // Iniciar todas las tareas
     this.tareas.forEach(tarea => {
       tarea.tarea.start();
-      console.log(`✅ Tarea programada iniciada: ${tarea.descripcion}`);
+      console.log(`Tarea programada iniciada: ${tarea.descripcion}`);
     });
 
-    console.log(`✅ ${this.tareas.length} tarea(s) programada(s) iniciada(s)`);
+    console.log(`${this.tareas.length} tarea(s) programada(s) iniciada(s)`);
   }
 
   /**
    * Detiene todas las tareas programadas
    */
   detener() {
-    console.log('🛑 Deteniendo tareas programadas...');
+    console.log('Deteniendo tareas programadas...');
     this.tareas.forEach(tarea => {
       tarea.tarea.stop();
-      console.log(`⏹️  Tarea detenida: ${tarea.descripcion}`);
+      console.log(`Tarea detenida: ${tarea.descripcion}`);
     });
     this.tareas = [];
-    console.log('✅ Todas las tareas han sido detenidas');
+    console.log('Todas las tareas han sido detenidas');
   }
 
   /**
    * Ejecuta manualmente la generación de clases (útil para testing)
    */
   async ejecutarGeneracionClases() {
-    console.log('🔄 Ejecutando generación de clases manualmente...');
+    console.log('Ejecutando generación de clases manualmente...');
     try {
       const resultado = await claseGeneratorService.generarClasesTodosLosGrupos();
-      console.log('✅ Clases generadas correctamente:', resultado);
+      console.log('Clases generadas correctamente:', resultado);
       return resultado;
     } catch (error) {
-      console.error('❌ Error al generar clases:', error.message);
+      console.error('Error al generar clases:', error.message);
       throw error;
     }
   }
