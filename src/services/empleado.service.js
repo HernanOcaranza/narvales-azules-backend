@@ -46,6 +46,13 @@ class EmpleadoService {
       if (data.dni && data.dni.length !== 8) {
         throw new Error('El campo dni debe tener 8 caracteres');
       }
+      if (data.email && data.email.length > 100) {
+        throw new Error('El campo email no puede exceder 100 caracteres');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (data.email && !emailRegex.test(data.email)) {
+        throw new Error('El campo email debe tener un formato válido');
+      }
 
       // Verificar si ya existe un empleado con el mismo usuario
       const existingEmpleado = await empleadoRepository.findByUsuario(data.usuario);
@@ -88,6 +95,13 @@ class EmpleadoService {
       }
       if (data.dni && data.dni.length !== 8) {
         throw new Error('El campo dni debe tener 8 caracteres');
+      }
+      if (data.email && data.email.length > 100) {
+        throw new Error('El campo email no puede exceder 100 caracteres');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (data.email && !emailRegex.test(data.email)) {
+        throw new Error('El campo email debe tener un formato válido');
       }
 
       // Si se está actualizando el usuario, verificar que no exista otro con ese usuario

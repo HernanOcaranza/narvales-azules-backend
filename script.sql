@@ -19,6 +19,7 @@ CREATE TABLE Empleado(
     nombre VARCHAR(50) NOT NULL,
     apellido VARCHAR(50) NOT NULL,
     dni CHAR(8),
+    email VARCHAR(100),
     telefono CHAR(10) NOT NULL,
     fecha_alta DATE NOT NULL,
     estado TINYINT(1) NOT NULL DEFAULT 1,

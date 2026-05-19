@@ -1,4 +1,5 @@
 import tipoMembreciaRepository from '../repositories/tipo_membrecia.repository.js';
+import precioMembreciaRepository from '../repositories/precio_membrecia.repository.js';
 import membresiaRepository from '../repositories/membrecia.repository.js';
 
 class TipoMembreciaService {
@@ -41,7 +42,22 @@ class TipoMembreciaService {
         }
       }
 
-      return await tipoMembreciaRepository.create(data);
+      // Crear el tipo de membresía
+      const tipo = await tipoMembreciaRepository.create(data);
+
+      // Si se proporciona precio, crear el registro de precio
+      if (data.precio && data.precio > 0) {
+        const precioData = {
+          id_tipo_membrecia: tipo.id_tipo_membrecia,
+          precio: data.precio,
+          fecha_inicio_vigencia: data.fecha_inicio_vigencia || new Date().toISOString().split('T')[0],
+          fecha_fin_vigencia: data.fecha_fin_vigencia || null,
+          estado: 1
+        };
+        await precioMembreciaRepository.create(precioData);
+      }
+
+      return tipo;
     } catch (error) {
       throw new Error(`Error al crear tipo de membresía: ${error.message}`);
     }
@@ -61,7 +77,33 @@ class TipoMembreciaService {
         }
       }
 
-      const tipo = await tipoMembreciaRepository.update(id, data);
+      // Si se proporciona un nuevo precio, crear un nuevo registro de precio (histórico)
+      if (data.precio && data.precio > 0) {
+        // Obtener el precio actual
+        const preciosActuales = await precioMembreciaRepository.findByTipoMembreciaId(id);
+        const precioActual = preciosActuales.find(p => p.estado === 1);
+
+        if (precioActual) {
+          // Desactivar el precio actual
+          await precioMembreciaRepository.update(precioActual.id_precio_membrecia, {
+            estado: 0,
+            fecha_fin_vigencia: new Date().toISOString().split('T')[0]
+          });
+        }
+
+        // Crear el nuevo precio
+        await precioMembreciaRepository.create({
+          id_tipo_membrecia: id,
+          precio: data.precio,
+          fecha_inicio_vigencia: new Date().toISOString().split('T')[0],
+          fecha_fin_vigencia: null,
+          estado: 1
+        });
+      }
+
+      // Actualizar solo los datos del tipo (sin el precio)
+      const { precio, fecha_inicio_vigencia, fecha_fin_vigencia, ...tipoData } = data;
+      const tipo = await tipoMembreciaRepository.update(id, tipoData);
       if (!tipo) {
         throw new Error('Tipo de membresía no encontrado');
       }
