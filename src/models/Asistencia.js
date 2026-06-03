@@ -17,6 +17,11 @@ const Asistencia = sequelize.define('Asistencia', {
     allowNull: false,
     defaultValue: 0
   },
+  es_recuperacion: {
+    type: DataTypes.TINYINT(1),
+    allowNull: false,
+    defaultValue: 0
+  },
   id_clase: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -34,6 +39,10 @@ const Asistencia = sequelize.define('Asistencia', {
       model: 'Alumno',
       key: 'id_alumno'
     }
+  },
+  eliminado_en: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'Asistencia',

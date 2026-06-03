@@ -137,7 +137,7 @@ class GrupoRepository {
   }
 
   async update(id, data) {
-    const grupo = await Grupo.findOne({ where: { id_grupo: id, estado: 1 } });
+    const grupo = await Grupo.findByPk(id);
     if (!grupo) {
       return null;
     }

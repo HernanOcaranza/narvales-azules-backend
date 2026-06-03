@@ -1,5 +1,6 @@
 import empleadoRepository from '../repositories/empleado.repository.js';
 import bcrypt from 'bcrypt';
+import mailService from './mail.service.js';
 
 class EmpleadoService {
   async getAllEmpleados() {
@@ -72,7 +73,14 @@ class EmpleadoService {
       const hashedPassword = await bcrypt.hash(data.contrasenia, 10);
       data.contrasenia = hashedPassword;
 
-      return await empleadoRepository.create(data);
+      const nuevoEmpleado = await empleadoRepository.create(data);
+
+      // Enviar correo de bienvenida (fire-and-forget, no bloquea la creación)
+      if (nuevoEmpleado.email) {
+        this.#enviarBienvenida(nuevoEmpleado);
+      }
+
+      return nuevoEmpleado;
     } catch (error) {
       throw new Error(`Error al crear empleado: ${error.message}`);
     }
@@ -144,6 +152,44 @@ class EmpleadoService {
       return { message: 'Empleado eliminado correctamente' };
     } catch (error) {
       throw new Error(`Error al eliminar empleado: ${error.message}`);
+    }
+  }
+
+  /**
+   * Envía un correo de bienvenida al empleado recién creado.
+   *
+   * @param {Object} empleado - Instancia del empleado creado.
+   */
+  async #enviarBienvenida(empleado) {
+    try {
+      const nombreCompleto = `${empleado.nombre} ${empleado.apellido}`;
+
+      await mailService.sendMail({
+        to: empleado.email,
+        subject: '¡Bienvenido a Narvales Azules!',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #1e3a5f; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #ffffff; margin: 0;">Narvales Azules</h1>
+            </div>
+            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e3a5f;">¡Bienvenido, ${empleado.nombre}!</h2>
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Nos complace darte la bienvenida al equipo de <strong>Narvales Azules</strong>.
+                Tus credenciales de acceso ya están activas y podés ingresar al sistema con tu usuario.
+              </p>
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Cualquier duda o consulta no dudes en comunicarte con nosotros.
+              </p>
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #888; font-size: 14px;">
+                <p>Narvales Azules - Academia de Natación</p>
+              </div>
+            </div>
+          </div>
+        `
+      });
+    } catch (error) {
+      console.error(`Error al enviar correo de bienvenida a ${empleado.email}:`, error.message);
     }
   }
 }

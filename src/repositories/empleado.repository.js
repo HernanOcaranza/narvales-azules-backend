@@ -22,6 +22,12 @@ class EmpleadoRepository {
     });
   }
 
+  async findByEmail(email) {
+    return await Empleado.findOne({ 
+      where: { email, estado: 1 } 
+    });
+  }
+
   async findByDni(dni) {
     return await Empleado.findOne({ 
       where: { dni, estado: 1 } 

@@ -1,5 +1,6 @@
 import express from 'express';
 import claseController from '../controllers/clase.controller.js';
+import asistenciaController from '../controllers/asistencia.controller.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 import { requireAnyRole, requireAdmin } from '../middlewares/role.middleware.js';
 
@@ -12,6 +13,10 @@ router.get('/fecha', requireAnyRole, claseController.getByFecha.bind(claseContro
 router.get('/fecha-range', requireAnyRole, claseController.getByFechaRange.bind(claseController));
 router.post('/generar-todas', requireAdmin, claseController.generarTodas.bind(claseController));
 router.post('/actualizar-estados', requireAdmin, claseController.actualizarEstados.bind(claseController));
+router.post('/:idClase/asistencia-empleados', requireAnyRole, claseController.registrarAsistenciaEmpleados.bind(claseController));
+router.get('/:idClase/asistencia-empleados', requireAnyRole, claseController.getAsistenciaEmpleados.bind(claseController));
+router.post('/:idClase/asistencia-alumnos', requireAnyRole, asistenciaController.registrarAsistenciaAlumnos.bind(asistenciaController));
+router.get('/:idClase/asistencia-alumnos', requireAnyRole, asistenciaController.getAsistenciaAlumnos.bind(asistenciaController));
 router.get('/', requireAnyRole, claseController.getAll.bind(claseController));
 router.get('/:id', requireAnyRole, claseController.getById.bind(claseController));
 router.post('/', requireAdmin, claseController.create.bind(claseController));

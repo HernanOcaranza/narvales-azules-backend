@@ -1,9 +1,10 @@
 import { errorResponse } from '../utils/response.js';
 
 const ROLES_PERMITIDOS = {
-  admin: ['admin', 'recepcionista', 'profesor'],
-  recepcionista: ['recepcionista', 'profesor'],
-  profesor: ['profesor'],
+  admin: ['admin', 'recepcionista', 'profesor', 'guardavidas'],
+  recepcionista: ['recepcionista', 'profesor', 'guardavidas'],
+  profesor: ['profesor', 'guardavidas'],
+  guardavidas: ['guardavidas', 'profesor'],
 };
 
 const roleMiddleware = (allowedRoles = []) => {
@@ -29,6 +30,7 @@ const roleMiddleware = (allowedRoles = []) => {
 export const requireAdmin = roleMiddleware(['admin']);
 export const requireAdminOrRecepcionista = roleMiddleware(['admin', 'recepcionista']);
 export const requireAdminOrProfesor = roleMiddleware(['admin', 'profesor']);
-export const requireAnyRole = roleMiddleware(['admin', 'recepcionista', 'profesor']);
+export const requireAdminOrProfesorOrGuardavidas = roleMiddleware(['admin', 'profesor', 'guardavidas']);
+export const requireAnyRole = roleMiddleware(['admin', 'recepcionista', 'profesor', 'guardavidas']);
 
 export default roleMiddleware;

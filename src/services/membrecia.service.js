@@ -287,16 +287,26 @@ class MembreciaService {
       }
 
       // Preparar datos del pago
-      // Si viene el objeto pago, usar sus valores, sino crear uno por defecto
-      const fechaPago = data.pago?.fecha_pago || data.fecha_inicio;
-      const estadoPago = data.pago?.estado || 'pendiente';
-      const observacionesPago = data.pago?.observaciones || null;
-
-      // Validar estado del pago
-      const estadosPagoValidos = ['pendiente', 'parcial', 'completo', 'cancelado'];
-      if (!estadosPagoValidos.includes(estadoPago.toLowerCase())) {
-        throw new Error(`El estado del pago debe ser uno de: ${estadosPagoValidos.join(', ')}`);
+      // Obtener precio del tipo de membresía para calcular estado del pago
+      let precioMembrecia = null;
+      if (data.id_tipo_membrecia) {
+        const precioVigente = await precioMembreciaRepository.findPrecioVigente(data.id_tipo_membrecia, data.fecha_inicio);
+        precioMembrecia = precioVigente?.precio || null;
       }
+
+      // Calcular total pagado y estado automáticamente
+      const detallesPago = data.pago?.detalles || [];
+      const totalPagado = this.calcularTotalPagado(detallesPago);
+      
+      // Validar que no pague más de lo que debe
+      if (precioMembrecia && totalPagado > precioMembrecia) {
+        throw new Error(`El monto total (${totalPagado}) no puede exceder el precio de la membresía (${precioMembrecia})`);
+      }
+
+      // Calcular estado del pago automáticamente
+      const estadoPago = this.calcularEstadoPago(totalPagado, precioMembrecia);
+      const fechaPago = data.pago?.fecha_pago || data.fecha_inicio;
+      const observacionesPago = data.pago?.observaciones || null;
 
       // Crear el pago (siempre se crea, incluso sin detalles)
       const pagoData = {
@@ -311,7 +321,6 @@ class MembreciaService {
 
       // Crear detalles de pago si se proporcionan (opcional)
       // Si no se proporcionan detalles, el pago se crea vacío (sin detalles)
-      const detallesPago = data.pago?.detalles || [];
       if (detallesPago.length > 0) {
         for (const detalle of detallesPago) {
           if (!detalle.metodo_pago || detalle.monto_parcial === undefined || detalle.monto_parcial === null || !detalle.fecha_detalle) {
@@ -343,25 +352,6 @@ class MembreciaService {
       };
 
       const membresia = await membresiaRepository.create(membresiaData, transaction);
-
-      // Calcular el estado del pago basado en el total pagado y el precio de la membresía
-      // Obtener los detalles de pago creados
-      const detallesCreados = await detallePagoRepository.findByPagoId(pago.id_pago, transaction);
-      const totalPagado = this.calcularTotalPagado(detallesCreados);
-      
-      // Obtener el precio vigente de la membresía para la fecha de inicio
-      const precioVigente = await precioMembreciaRepository.findPrecioVigente(
-        data.id_tipo_membrecia,
-        data.fecha_inicio
-      );
-      
-      const precioMembrecia = precioVigente ? parseFloat(precioVigente.precio) : 0;
-      const nuevoEstadoPago = this.calcularEstadoPago(totalPagado, precioMembrecia);
-      
-      // Actualizar el estado del pago si es diferente al inicial
-      if (nuevoEstadoPago !== estadoPago.toLowerCase()) {
-        await pagoRepository.update(pago.id_pago, { estado: nuevoEstadoPago }, transaction);
-      }
 
       // Commit de la transacción
       await transaction.commit();
@@ -525,18 +515,30 @@ class MembreciaService {
       if (data.pago && idPagoExistente) {
         const pagoData = data.pago;
 
-        // Validar estado del pago si se está actualizando
-        if (pagoData.estado) {
-          const estadosPagoValidos = ['pendiente', 'parcial', 'completo', 'cancelado'];
-          if (!estadosPagoValidos.includes(pagoData.estado.toLowerCase())) {
-            throw new Error(`El estado del pago debe ser uno de: ${estadosPagoValidos.join(', ')}`);
-          }
+        // Obtener precio actual del tipo de membresía
+        let precioMembrecia = null;
+        const membresiaActualizada = data.id_tipo_membrecia ? data.id_tipo_membrecia : (await membresiaRepository.findById(id))?.id_tipo_membrecia;
+        if (membresiaActualizada) {
+          const precioVigente = await precioMembreciaRepository.findPrecioVigente(membresiaActualizada, data.fecha_inicio || new Date().toISOString().split('T')[0]);
+          precioMembrecia = precioVigente?.precio || null;
         }
+
+        // Calcular total pagado y estado automáticamente
+        const detallesPago = pagoData.detalles || [];
+        const totalPagado = this.calcularTotalPagado(detallesPago);
+        
+        // Validar que no pague más de lo que debe
+        if (precioMembrecia && totalPagado > precioMembrecia) {
+          throw new Error(`El monto total (${totalPagado}) no puede exceder el precio de la membresía (${precioMembrecia})`);
+        }
+
+        // Calcular estado del pago automáticamente
+        const estadoPagoCalculado = this.calcularEstadoPago(totalPagado, precioMembrecia);
 
         // Actualizar el pago
         const pagoUpdateData = {
           ...(pagoData.fecha_pago && { fecha_pago: pagoData.fecha_pago }),
-          ...(pagoData.estado && { estado: pagoData.estado }),
+          estado: estadoPagoCalculado, // Siempre calcular automáticamente
           ...(pagoData.observaciones !== undefined && { observaciones: pagoData.observaciones })
         };
 

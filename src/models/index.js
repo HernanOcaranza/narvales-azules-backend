@@ -12,12 +12,14 @@ import Tutor from './Tutor.js';
 import Alumno from './Alumno.js';
 import Clase from './Clase.js';
 import ClaseEmpleado from './Clase_Empleado.js';
+import GrupoEmpleado from './Grupo_Empleado.js';
 import Pago from './Pago.js';
 import Detalle_Pago from './Detalle_Pago.js';
 import Tipo_Membrecia from './Tipo_Membrecia.js';
 import Precio_Membrecia from './Precio_Membrecia.js';
 import Membrecia from './Membrecia.js';
 import Asistencia from './Asistencia.js';
+import RecuperacionClave from './RecuperacionClave.js';
 
 // Inicializar relaciones
 Categoria.hasMany(Grupo, { foreignKey: 'id_categoria', as: 'grupos' });
@@ -77,6 +79,22 @@ Membrecia.belongsTo(Tipo_Membrecia, { foreignKey: 'id_tipo_membrecia', as: 'tipo
 Grupo.hasMany(Membrecia, { foreignKey: 'id_grupo', as: 'membresias' });
 Membrecia.belongsTo(Grupo, { foreignKey: 'id_grupo', as: 'grupo' });
 
+// Relaciones de Grupo_Empleado (plantilla de empleados por grupo)
+Grupo.belongsToMany(Empleado, {
+  through: GrupoEmpleado,
+  foreignKey: 'id_grupo',
+  otherKey: 'id_empleado',
+  as: 'empleados_asignados'
+});
+Empleado.belongsToMany(Grupo, {
+  through: GrupoEmpleado,
+  foreignKey: 'id_empleado',
+  otherKey: 'id_grupo',
+  as: 'grupos_asignados'
+});
+GrupoEmpleado.belongsTo(Grupo, { foreignKey: 'id_grupo', as: 'grupo' });
+GrupoEmpleado.belongsTo(Empleado, { foreignKey: 'id_empleado', as: 'empleado' });
+
 // Relaciones de Asistencia
 Clase.hasMany(Asistencia, { foreignKey: 'id_clase', as: 'asistencias' });
 Asistencia.belongsTo(Clase, { foreignKey: 'id_clase', as: 'clase' });
@@ -97,13 +115,19 @@ const db = {
   Alumno,
   Clase,
   ClaseEmpleado,
+  GrupoEmpleado,
   Pago,
   Detalle_Pago,
   Tipo_Membrecia,
   Precio_Membrecia,
   Membrecia,
   Asistencia,
+  RecuperacionClave,
 };
+
+// Relaciones de RecuperacionClave
+Empleado.hasMany(RecuperacionClave, { foreignKey: 'id_empleado', as: 'recuperaciones' });
+RecuperacionClave.belongsTo(Empleado, { foreignKey: 'id_empleado', as: 'empleado' });
 
 export default db;
 
