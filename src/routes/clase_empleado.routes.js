@@ -1,20 +1,19 @@
 import express from 'express';
 import claseEmpleadoController from '../controllers/clase_empleado.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAnyRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/clase_empleado.yaml
-router.get('/clase/:idClase', claseEmpleadoController.getByClase.bind(claseEmpleadoController));
-router.get('/empleado/:idEmpleado', claseEmpleadoController.getByEmpleado.bind(claseEmpleadoController));
-router.get('/', claseEmpleadoController.getAll.bind(claseEmpleadoController));
-router.get('/:idClase/:idEmpleado', claseEmpleadoController.getById.bind(claseEmpleadoController));
-router.post('/', claseEmpleadoController.create.bind(claseEmpleadoController));
-router.put('/:idClase/:idEmpleado', claseEmpleadoController.update.bind(claseEmpleadoController));
-router.delete('/:idClase/:idEmpleado', claseEmpleadoController.delete.bind(claseEmpleadoController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/clase/:idClase', requireAnyRole, claseEmpleadoController.getByClase.bind(claseEmpleadoController));
+router.get('/empleado/:idEmpleado', requireAnyRole, claseEmpleadoController.getByEmpleado.bind(claseEmpleadoController));
+router.get('/', requireAnyRole, claseEmpleadoController.getAll.bind(claseEmpleadoController));
+router.get('/:idClase/:idEmpleado', requireAnyRole, claseEmpleadoController.getById.bind(claseEmpleadoController));
+router.post('/', requireAnyRole, claseEmpleadoController.create.bind(claseEmpleadoController));
+router.put('/:idClase/:idEmpleado', requireAnyRole, claseEmpleadoController.update.bind(claseEmpleadoController));
+router.delete('/:idClase/:idEmpleado', requireAnyRole, claseEmpleadoController.delete.bind(claseEmpleadoController));
 
 export default router;
 

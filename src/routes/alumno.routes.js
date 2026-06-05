@@ -1,21 +1,22 @@
 import express from 'express';
 import alumnoController from '../controllers/alumno.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import asistenciaController from '../controllers/asistencia.controller.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAnyRole, requireAdmin, requireAdminOrRecepcionista } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/alumno.yaml
-router.get('/search', alumnoController.searchByNombre.bind(alumnoController));
-router.get('/', alumnoController.getAll.bind(alumnoController));
-router.get('/tutor/:idTutor', alumnoController.getByTutor.bind(alumnoController));
-router.get('/:id/completo', alumnoController.getCompletoById.bind(alumnoController));
-router.get('/:id', alumnoController.getById.bind(alumnoController));
-router.post('/', alumnoController.create.bind(alumnoController));
-router.put('/:id', alumnoController.update.bind(alumnoController));
-router.delete('/:id', alumnoController.delete.bind(alumnoController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/search', requireAnyRole, alumnoController.searchByNombre.bind(alumnoController));
+router.get('/', requireAnyRole, alumnoController.getAll.bind(alumnoController));
+router.get('/tutor/:idTutor', requireAnyRole, alumnoController.getByTutor.bind(alumnoController));
+router.get('/:id/clases', requireAnyRole, asistenciaController.getClasesDeAlumno.bind(asistenciaController));
+router.get('/:id/completo', requireAnyRole, alumnoController.getCompletoById.bind(alumnoController));
+router.get('/:id', requireAnyRole, alumnoController.getById.bind(alumnoController));
+router.post('/', requireAdminOrRecepcionista, alumnoController.create.bind(alumnoController));
+router.put('/:id', requireAdminOrRecepcionista, alumnoController.update.bind(alumnoController));
+router.delete('/:id', requireAdmin, alumnoController.delete.bind(alumnoController));
 
 export default router;
 

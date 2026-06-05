@@ -1,14 +1,17 @@
 import express from 'express';
 import tipoMembreciaController from '../controllers/tipo_membrecia.controller.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAdminOrRecepcionista } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/tipo_membrecia.yaml
-router.get('/', tipoMembreciaController.getAll.bind(tipoMembreciaController));
-router.get('/:id', tipoMembreciaController.getById.bind(tipoMembreciaController));
-router.post('/', tipoMembreciaController.create.bind(tipoMembreciaController));
-router.put('/:id', tipoMembreciaController.update.bind(tipoMembreciaController));
-router.delete('/:id', tipoMembreciaController.delete.bind(tipoMembreciaController));
+router.use(authMiddleware);
+
+router.get('/', requireAdminOrRecepcionista, tipoMembreciaController.getAll.bind(tipoMembreciaController));
+router.get('/:id', requireAdminOrRecepcionista, tipoMembreciaController.getById.bind(tipoMembreciaController));
+router.post('/', requireAdmin, tipoMembreciaController.create.bind(tipoMembreciaController));
+router.put('/:id', requireAdmin, tipoMembreciaController.update.bind(tipoMembreciaController));
+router.delete('/:id', requireAdmin, tipoMembreciaController.delete.bind(tipoMembreciaController));
 
 export default router;
 

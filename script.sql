@@ -19,6 +19,7 @@ CREATE TABLE Empleado(
     nombre VARCHAR(50) NOT NULL,
     apellido VARCHAR(50) NOT NULL,
     dni CHAR(8),
+    email VARCHAR(100),
     telefono CHAR(10) NOT NULL,
     fecha_alta DATE NOT NULL,
     estado TINYINT(1) NOT NULL DEFAULT 1,
@@ -133,12 +134,27 @@ CREATE TABLE Clase_Empleado(
     FOREIGN KEY (id_empleado) REFERENCES Empleado(id_empleado)
 ) ENGINE=InnoDB;
 
+CREATE TABLE Grupo_Empleado(
+    id_grupo_empleado INT AUTO_INCREMENT PRIMARY KEY,
+    id_grupo INT NOT NULL,
+    id_empleado INT NOT NULL,
+    rol VARCHAR(20) NOT NULL,
+    estado TINYINT(1) NOT NULL DEFAULT 1,
+    eliminado_en DATETIME NULL,
+    FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo),
+    FOREIGN KEY (id_empleado) REFERENCES Empleado(id_empleado)
+) ENGINE=InnoDB;
+
+CREATE UNIQUE INDEX unique_grupo_empleado ON Grupo_Empleado(id_grupo, id_empleado);
+
 CREATE TABLE Asistencia(
     id_asistencia INT AUTO_INCREMENT PRIMARY KEY,
     observacion VARCHAR(100),
     presente TINYINT(1) NOT NULL DEFAULT 0,
+    es_recuperacion TINYINT(1) NOT NULL DEFAULT 0,
     id_clase INT NOT NULL,
     id_alumno INT NOT NULL,
+    eliminado_en DATETIME NULL,
     FOREIGN KEY (id_clase) REFERENCES Clase(id_clase),
     FOREIGN KEY (id_alumno) REFERENCES Alumno(id_alumno)
 ) ENGINE=InnoDB;
@@ -199,6 +215,16 @@ CREATE TABLE Membrecia(
     FOREIGN KEY (id_pago) REFERENCES Pago(id_pago),
     FOREIGN KEY (id_tipo_membrecia) REFERENCES Tipo_Membrecia(id_tipo_membrecia),
     FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
+) ENGINE=InnoDB;
+
+CREATE TABLE RecuperacionClave(
+    id_recuperacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_empleado INT NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    expira_en DATETIME NOT NULL,
+    usado TINYINT(1) NOT NULL DEFAULT 0,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_empleado) REFERENCES Empleado(id_empleado)
 ) ENGINE=InnoDB;
 
 -- ======================================================

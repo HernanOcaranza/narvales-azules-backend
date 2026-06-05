@@ -43,6 +43,24 @@ class ClaseRepository {
 
     const { count, rows } = await Clase.findAndCountAll({
       where,
+      attributes: {
+        include: [
+          [
+            Clase.sequelize.literal(`(
+              SELECT COUNT(*) FROM Clase_Empleado ce
+              WHERE ce.id_clase = Clase.id_clase AND ce.estado = 1
+            )`),
+            'total_empleados_asistencia'
+          ],
+          [
+            Clase.sequelize.literal(`(
+              SELECT COUNT(*) FROM Asistencia a
+              WHERE a.id_clase = Clase.id_clase AND a.eliminado_en IS NULL
+            )`),
+            'total_alumnos_asistencia'
+          ]
+        ]
+      },
       include: [
         {
           model: Grupo,

@@ -1,4 +1,5 @@
 import empleadoService from '../services/empleado.service.js';
+import claseEmpleadoService from '../services/clase_empleado.service.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 class EmpleadoController {
@@ -60,6 +61,20 @@ class EmpleadoController {
       return successResponse(res, result, 'Empleado eliminado correctamente');
     } catch (error) {
       const statusCode = error.message.includes('no encontrado') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async getClasesDeEmpleado(req, res) {
+    try {
+      const { id } = req.params;
+      const filtros = {};
+      if (req.query.fechaDesde) filtros.fechaDesde = req.query.fechaDesde;
+      if (req.query.fechaHasta) filtros.fechaHasta = req.query.fechaHasta;
+      const result = await claseEmpleadoService.getClasesByEmpleado(id, filtros);
+      return successResponse(res, result, 'Clases del empleado obtenidas correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') || error.message.includes('inactivo') ? 404 : 500;
       return errorResponse(res, error.message, statusCode);
     }
   }

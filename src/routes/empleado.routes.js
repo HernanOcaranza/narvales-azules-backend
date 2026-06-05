@@ -1,18 +1,18 @@
 import express from 'express';
 import empleadoController from '../controllers/empleado.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAnyRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/empleado.yaml
-router.get('/', empleadoController.getAll.bind(empleadoController));
-router.get('/:id', empleadoController.getById.bind(empleadoController));
-router.post('/', empleadoController.create.bind(empleadoController));
-router.put('/:id', empleadoController.update.bind(empleadoController));
-router.delete('/:id', empleadoController.delete.bind(empleadoController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/', requireAdmin, empleadoController.getAll.bind(empleadoController));
+router.get('/:id/clases', requireAnyRole, empleadoController.getClasesDeEmpleado.bind(empleadoController));
+router.get('/:id', requireAdmin, empleadoController.getById.bind(empleadoController));
+router.post('/', requireAdmin, empleadoController.create.bind(empleadoController));
+router.put('/:id', requireAdmin, empleadoController.update.bind(empleadoController));
+router.delete('/:id', requireAdmin, empleadoController.delete.bind(empleadoController));
 
 export default router;
 

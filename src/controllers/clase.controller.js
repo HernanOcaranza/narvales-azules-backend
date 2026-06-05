@@ -1,5 +1,6 @@
 import claseService from '../services/clase.service.js';
 import claseGeneratorService from '../services/clase-generator.service.js';
+import claseEmpleadoService from '../services/clase_empleado.service.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 class ClaseController {
@@ -158,6 +159,30 @@ class ClaseController {
       return successResponse(res, resultado, resultado.mensaje, 200);
     } catch (error) {
       return errorResponse(res, error.message, 500);
+    }
+  }
+
+  async registrarAsistenciaEmpleados(req, res) {
+    try {
+      const { idClase } = req.params;
+      const empleados = req.body;
+      const result = await claseEmpleadoService.registrarAsistenciaEmpleados(idClase, empleados);
+      return successResponse(res, result, 'Asistencia registrada correctamente', 200);
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrada') || error.message.includes('eliminada') ? 404 :
+        error.message.includes('obligatorio') || error.message.includes('duplicados') || error.message.includes('inactivo') || error.message.includes('debe ser') || error.message.includes('exceder') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async getAsistenciaEmpleados(req, res) {
+    try {
+      const { idClase } = req.params;
+      const result = await claseEmpleadoService.getAsistenciaEmpleadosConDefaults(idClase);
+      return successResponse(res, result, 'Asistencia obtenida correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrada') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
     }
   }
 }

@@ -1,20 +1,21 @@
 import express from 'express';
 import grupoController from '../controllers/grupo.controller.js';
-// import authMiddleware from '../middlewares/auth.middleware.js';
+import grupoEmpleadoController from '../controllers/grupo_empleado.controller.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
+import { requireAnyRole, requireAdmin } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// Rutas - Documentación en src/docs/grupo.yaml
-router.get('/', grupoController.getAll.bind(grupoController));
-router.get('/:id', grupoController.getById.bind(grupoController));
-router.get('/disciplina/:id_disciplina', grupoController.getByDisciplina.bind(grupoController));
-router.get('/categoria/:id_categoria', grupoController.getByCategoria.bind(grupoController));
-router.post('/', grupoController.create.bind(grupoController));
-router.put('/:id', grupoController.update.bind(grupoController));
-router.delete('/:id', grupoController.delete.bind(grupoController));
+router.use(authMiddleware);
 
-// Si necesitas proteger las rutas, descomenta la siguiente línea:
-// router.use(authMiddleware);
+router.get('/', requireAnyRole, grupoController.getAll.bind(grupoController));
+router.get('/:id/empleados', requireAnyRole, grupoEmpleadoController.getByGrupo.bind(grupoEmpleadoController));
+router.get('/:id', requireAnyRole, grupoController.getById.bind(grupoController));
+router.get('/disciplina/:id_disciplina', requireAnyRole, grupoController.getByDisciplina.bind(grupoController));
+router.get('/categoria/:id_categoria', requireAnyRole, grupoController.getByCategoria.bind(grupoController));
+router.post('/', requireAdmin, grupoController.create.bind(grupoController));
+router.put('/:id', requireAdmin, grupoController.update.bind(grupoController));
+router.delete('/:id', requireAdmin, grupoController.delete.bind(grupoController));
 
 export default router;
 

@@ -33,6 +33,13 @@ const Empleado = sequelize.define('Empleado', {
     type: DataTypes.CHAR(8),
     allowNull: true
   },
+  email: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    validate: {
+      isEmail: true
+    }
+  },
   telefono: {
     type: DataTypes.CHAR(10),
     allowNull: false
