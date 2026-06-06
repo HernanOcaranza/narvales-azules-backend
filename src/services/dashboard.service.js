@@ -128,6 +128,7 @@ class DashboardService {
         this._getPromedioAsistencia(),
         this._getMembresiaPorTipo(),
         this._getPagosRecientes(5),
+        this._getEgresosRecientes(5),
         this._getIngresosUltimos6Meses(),
       ]);
 
@@ -170,8 +171,9 @@ class DashboardService {
         ultimasClases: resultados[6],
         promedioAsistencia: resultados[7],
         pagosRecientes: resultados[9],
+        egresosRecientes: resultados[10],
         tendencias: {
-          mensual: resultados[10],
+          mensual: resultados[11],
         },
       };
     } catch (error) {
@@ -185,7 +187,7 @@ class DashboardService {
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
        WHERE p.tipo = ?
-         AND p.estado IN ('completo', 'parcial', 'pendiente')
+         AND p.estado IN ('completo', 'completado', 'parcial', 'pendiente')
          AND dp.fecha_detalle BETWEEN ? AND ?`,
       { replacements: [tipo, fechaInicio, fechaFin], type: db.Sequelize.QueryTypes.SELECT }
     );
@@ -287,14 +289,26 @@ class DashboardService {
     });
   }
 
+  async _getEgresosRecientes(limit) {
+    return await Pago.findAll({
+      where: { tipo: 'egreso', estado: { [Op.ne]: 'eliminado' } },
+      include: [
+        { model: Empleado, as: 'empleado', attributes: ['nombre', 'apellido'], required: false },
+        { model: Detalle_Pago, as: 'detalles', where: { estado: 1 }, attributes: ['monto_parcial', 'metodo_pago', 'fecha_detalle'], required: false },
+      ],
+      order: [['fecha_pago', 'DESC']],
+      limit,
+    });
+  }
+
   async _getIngresosUltimos6Meses() {
     const rows = await db.sequelize.query(
       `SELECT DATE_FORMAT(dp.fecha_detalle, '%Y-%m') as mes, p.tipo,
               COALESCE(SUM(dp.monto_parcial), 0) as total
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
-       WHERE p.estado IN ('completo', 'parcial', 'pendiente')
-         AND dp.fecha_detalle >= DATE_ADD(CURDATE(), INTERVAL -6 MONTH)
+        WHERE p.estado IN ('completo', 'completado', 'parcial', 'pendiente')
+          AND dp.fecha_detalle >= DATE_ADD(CURDATE(), INTERVAL -6 MONTH)
        GROUP BY mes, p.tipo
        ORDER BY mes ASC`,
       { type: db.Sequelize.QueryTypes.SELECT }
