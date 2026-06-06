@@ -1,11 +1,17 @@
 import db from '../models/index.js';
+import { Op } from 'sequelize';
 
 const { Empleado } = db;
 
 class EmpleadoRepository {
-  async findAll() {
+  async findAll(options = {}) {
+    const { tipo, nombre, estado } = options;
+    const where = {};
+    if (tipo) where.tipo = tipo;
+    if (nombre) where.nombre = { [Op.like]: `%${nombre}%` };
+    where.estado = estado !== undefined ? estado : 1;
     return await Empleado.findAll({
-      where: { estado: 1 },
+      where,
       order: [['apellido', 'ASC'], ['nombre', 'ASC']]
     });
   }

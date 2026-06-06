@@ -1,13 +1,16 @@
+import db from '../models/index.js';
 import pagoRepository from '../repositories/pago.repository.js';
 import detallePagoRepository from '../repositories/detalle_pago.repository.js';
 import membresiaRepository from '../repositories/membrecia.repository.js';
 
+const { sequelize } = db;
+
 class PagoService {
   async getAllPagos(options = {}) {
     try {
-      const { page = 1, limit = 10 } = options;
+      const { page = 1, limit = 10, tipo, estado, fechaDesde, fechaHasta, observaciones, id_empleado, sinEmpleado } = options;
       const offset = (page - 1) * limit;
-      return await pagoRepository.findAll({ limit, offset });
+      return await pagoRepository.findAll({ limit, offset, tipo, estado, fechaDesde, fechaHasta, observaciones, id_empleado, sinEmpleado });
     } catch (error) {
       throw new Error(`Error al obtener pagos: ${error.message}`);
     }
@@ -47,9 +50,9 @@ class PagoService {
         throw new Error('El tipo debe ser "ingreso" o "egreso"');
       }
 
-      // Validar que si es egreso, debe tener id_empleado
-      if (data.tipo === 'egreso' && !data.id_empleado) {
-        throw new Error('Los pagos de tipo egreso deben tener un empleado asociado');
+      // Para egreso, se necesita id_empleado (pago a profesor) o al menos observaciones (gasto general)
+      if (data.tipo === 'egreso' && !data.id_empleado && !data.observaciones) {
+        throw new Error('Los pagos de tipo egreso deben tener un empleado asociado o una descripción');
       }
 
       // Validar que si es ingreso, no debe tener id_empleado (se relaciona con membresía)
@@ -88,10 +91,11 @@ class PagoService {
 
       const tipoFinal = data.tipo || pagoActual.tipo;
       
-      // Validar que si es egreso, debe tener id_empleado
+      // Para egreso, se necesita id_empleado (pago a profesor) o al menos observaciones (gasto general)
       const idEmpleadoFinal = data.id_empleado !== undefined ? data.id_empleado : pagoActual.id_empleado;
-      if (tipoFinal === 'egreso' && !idEmpleadoFinal) {
-        throw new Error('Los pagos de tipo egreso deben tener un empleado asociado');
+      const observacionesFinal = data.observaciones !== undefined ? data.observaciones : pagoActual.observaciones;
+      if (tipoFinal === 'egreso' && !idEmpleadoFinal && !observacionesFinal) {
+        throw new Error('Los pagos de tipo egreso deben tener un empleado asociado o una descripción');
       }
 
       // Validar que si es ingreso, no debe tener id_empleado (se relaciona con membresía)
@@ -106,6 +110,54 @@ class PagoService {
       return pago;
     } catch (error) {
       throw new Error(`Error al actualizar pago: ${error.message}`);
+    }
+  }
+
+  async createEgresoConDetalle(data) {
+    const { id_empleado, observaciones, fecha_pago, estado, monto, metodo_pago, referencia_transferencia } = data;
+
+    if (!fecha_pago || !estado) {
+      throw new Error('Los campos fecha_pago y estado son obligatorios');
+    }
+    if (!id_empleado && !observaciones) {
+      throw new Error('Los pagos de tipo egreso deben tener un empleado asociado o una descripción');
+    }
+    if (!monto || !metodo_pago) {
+      throw new Error('Los campos monto y metodo_pago son obligatorios');
+    }
+    if (parseFloat(monto) <= 0) {
+      throw new Error('El monto debe ser mayor a 0');
+    }
+    if (observaciones && observaciones.length > 60) {
+      throw new Error('El campo observaciones no puede exceder 60 caracteres');
+    }
+    if (metodo_pago.length > 20) {
+      throw new Error('El campo metodo_pago no puede exceder 20 caracteres');
+    }
+
+    const transaction = await sequelize.transaction();
+    try {
+      const pago = await pagoRepository.create({
+        tipo: 'egreso',
+        fecha_pago,
+        estado,
+        observaciones: observaciones || null,
+        id_empleado: id_empleado || null
+      }, transaction);
+
+      await detallePagoRepository.create({
+        id_pago: pago.id_pago,
+        metodo_pago,
+        monto_parcial: parseFloat(monto),
+        fecha_detalle: fecha_pago,
+        referencia_transferencia: referencia_transferencia || null
+      }, transaction);
+
+      await transaction.commit();
+      return await pagoRepository.findById(pago.id_pago);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
   }
 

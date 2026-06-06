@@ -28,6 +28,18 @@ class GrupoService {
     }
   }
 
+  async getGrupoCompletoById(id) {
+    try {
+      const grupo = await grupoRepository.findByIdWithDetails(id);
+      if (!grupo) {
+        throw new Error('Grupo no encontrado');
+      }
+      return grupo;
+    } catch (error) {
+      throw new Error(`Error al obtener grupo completo: ${error.message}`);
+    }
+  }
+
   async getGruposByDisciplina(id_disciplina) {
     try {
       // Verificar que la disciplina existe

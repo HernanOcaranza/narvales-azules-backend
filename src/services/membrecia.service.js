@@ -42,18 +42,19 @@ class MembreciaService {
    * @returns {string} - Estado del pago: 'pendiente', 'parcial', 'completo'
    */
   calcularEstadoPago(totalPagado, precioMembrecia) {
-    if (!precioMembrecia || precioMembrecia <= 0) {
-      // Si no hay precio definido, considerar como pendiente
+    if (totalPagado <= 0) {
       return 'pendiente';
     }
 
-    if (totalPagado <= 0) {
-      return 'pendiente';
-    } else if (totalPagado >= precioMembrecia) {
+    if (!precioMembrecia || precioMembrecia <= 0) {
       return 'completo';
-    } else {
-      return 'parcial';
     }
+
+    if (totalPagado >= precioMembrecia) {
+      return 'completo';
+    }
+
+    return 'parcial';
   }
 
   /**
@@ -217,13 +218,7 @@ class MembreciaService {
       }
 
       // Calcular fecha_fin automáticamente basándose en duracion_dias del tipo de membresía
-      // La fecha_fin se calcula siempre en el backend, ignorando cualquier valor que venga del frontend
-      let fechaFin = null;
-      if (tipo.duracion_dias) {
-        const fechaInicio = new Date(data.fecha_inicio);
-        fechaInicio.setDate(fechaInicio.getDate() + tipo.duracion_dias - 1); // -1 porque el día de inicio cuenta
-        fechaFin = fechaInicio.toISOString().split('T')[0]; // Formato YYYY-MM-DD
-      }
+      const fechaFin = this.calcularFechaFin(data.fecha_inicio, tipo.duracion_dias);
 
       // Validar estado
       const estadosValidos = ['activa', 'vencida', 'suspendida', 'cancelada'];
@@ -231,11 +226,17 @@ class MembreciaService {
         throw new Error(`El estado debe ser uno de: ${estadosValidos.join(', ')}`);
       }
 
+      // Si la fecha de fin ya pasó, marcar como vencida automáticamente
+      let estadoFinal = data.estado;
+      if (fechaFin && new Date(fechaFin) < new Date(new Date().toISOString().split('T')[0])) {
+        estadoFinal = 'vencida';
+      }
+
       // Crear la membresía con la fecha_fin calculada automáticamente
       const membresiaData = {
         fecha_inicio: data.fecha_inicio,
-        fecha_fin: this.calcularFechaFin(data.fecha_inicio, tipo.duracion_dias), // Siempre usar la fecha calculada, ignorar data.fecha_fin del frontend
-        estado: data.estado,
+        fecha_fin: fechaFin,
+        estado: estadoFinal,
         id_alumno: data.id_alumno,
         id_pago: data.id_pago,
         id_tipo_membrecia: data.id_tipo_membrecia,
@@ -281,9 +282,14 @@ class MembreciaService {
 
       // Validar estado de membresía
       const estadosValidos = ['activa', 'vencida', 'suspendida', 'cancelada'];
-      const estadoMembrecia = data.estado || 'activa';
+      let estadoMembrecia = data.estado || 'activa';
       if (!estadosValidos.includes(estadoMembrecia.toLowerCase())) {
         throw new Error(`El estado debe ser uno de: ${estadosValidos.join(', ')}`);
+      }
+
+      // Si la fecha de fin ya pasó, marcar como vencida automáticamente
+      if (fechaFin && new Date(fechaFin) < new Date(new Date().toISOString().split('T')[0])) {
+        estadoMembrecia = 'vencida';
       }
 
       // Preparar datos del pago
@@ -637,7 +643,7 @@ class MembreciaService {
       if (!deleted) {
         throw new Error('Membresía no encontrada');
       }
-      return { message: 'Membresía eliminada correctamente' };
+      return { message: 'Membresía cancelada correctamente' };
     } catch (error) {
       throw new Error(`Error al eliminar membresía: ${error.message}`);
     }

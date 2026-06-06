@@ -6,15 +6,8 @@ class PagoController {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
-      const { tipo } = req.query;
-      let result;
-      
-      if (tipo) {
-        const pagos = await pagoService.getPagosByTipo(tipo);
-        result = { data: pagos, total: pagos.length };
-      } else {
-        result = await pagoService.getAllPagos({ page, limit });
-      }
+      const { tipo, estado, fechaDesde, fechaHasta, observaciones, id_empleado, sinEmpleado } = req.query;
+      const result = await pagoService.getAllPagos({ page, limit, tipo, estado, fechaDesde, fechaHasta, observaciones, id_empleado, sinEmpleado });
       
       return successResponse(res, {
         data: result.data,
@@ -61,6 +54,18 @@ class PagoController {
     } catch (error) {
       const statusCode = error.message.includes('no encontrado') ? 404 : 
                         error.message.includes('debe ser') || 
+                        error.message.includes('exceder') ? 400 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
+  async createEgreso(req, res) {
+    try {
+      const pago = await pagoService.createEgresoConDetalle(req.body);
+      return successResponse(res, pago, 'Gasto registrado correctamente', 201);
+    } catch (error) {
+      const statusCode = error.message.includes('obligatorio') ||
+                        error.message.includes('debe ser') ||
                         error.message.includes('exceder') ? 400 : 500;
       return errorResponse(res, error.message, statusCode);
     }

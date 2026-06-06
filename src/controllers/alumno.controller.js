@@ -11,6 +11,7 @@ class AlumnoController {
       if (req.query.idTutor) filters.idTutor = parseInt(req.query.idTutor);
       if (req.query.idCategoria) filters.idCategoria = parseInt(req.query.idCategoria);
       if (req.query.idCondicion) filters.idCondicion = parseInt(req.query.idCondicion);
+      if (req.query.idGrupo) filters.idGrupo = parseInt(req.query.idGrupo);
       if (req.query.estado) filters.estado = req.query.estado;
       if (req.query.certificado) filters.certificado = req.query.certificado;
 

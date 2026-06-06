@@ -110,7 +110,7 @@ class MembreciaController {
     try {
       const { id } = req.params;
       const result = await membresiaService.deleteMembrecia(id);
-      return successResponse(res, result, 'Membresía eliminada correctamente');
+      return successResponse(res, result, 'Membresía cancelada correctamente');
     } catch (error) {
       const statusCode = error.message.includes('no encontrada') ? 404 : 500;
       return errorResponse(res, error.message, statusCode);

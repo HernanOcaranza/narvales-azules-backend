@@ -1,7 +1,7 @@
 import db from '../models/index.js';
 import { Op } from 'sequelize';
 
-const { Grupo, Disciplina, Categoria, GrupoHorario } = db;
+const { Grupo, Disciplina, Categoria, GrupoHorario, Membrecia, Alumno, Condicion, Tipo_Membrecia } = db;
 
 class GrupoRepository {
   async findAll(options = {}) {
@@ -73,6 +73,54 @@ class GrupoRepository {
           as: 'horarios',
           attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
           required: false
+        }
+      ]
+    });
+  }
+
+  async findByIdWithDetails(id) {
+    return await Grupo.findOne({
+      where: { id_grupo: id },
+      include: [
+        {
+          model: Disciplina,
+          as: 'disciplina',
+          attributes: ['id_disciplina', 'disciplina']
+        },
+        {
+          model: Categoria,
+          as: 'categoria',
+          attributes: ['id_categoria', 'categoria', 'descripcion']
+        },
+        {
+          model: GrupoHorario,
+          as: 'horarios',
+          attributes: ['id_grupo_horario', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo'],
+          required: false
+        },
+        {
+          model: Membrecia,
+          as: 'membresias',
+          include: [
+            {
+              model: Alumno,
+              as: 'alumno',
+              include: [
+                {
+                  model: Condicion,
+                  as: 'condicion',
+                  attributes: ['id_condicion', 'condicion', 'atencion']
+                }
+              ],
+              attributes: ['id_alumno', 'nombre', 'apellido', 'dni']
+            },
+            {
+              model: Tipo_Membrecia,
+              as: 'tipo_membrecia',
+              attributes: ['id_tipo_membrecia', 'tipo_membrecia', 'frecuencia_semanal']
+            }
+          ],
+          attributes: ['id_membrecia', 'fecha_inicio', 'fecha_fin', 'estado', 'eliminado_en', 'id_alumno', 'id_tipo_membrecia']
         }
       ]
     });

@@ -41,11 +41,15 @@ class MembreciaRepository {
       }
     }
 
+    const whereClause = {
+      ...(Object.keys(where).length > 0 ? where : {}),
+    };
+    if (whereClause.estado && whereClause.estado !== 'cancelada') {
+      whereClause.eliminado_en = null;
+    }
+
     const { count, rows } = await Membrecia.findAndCountAll({
-      where: { 
-        ...(Object.keys(where).length > 0 ? where : {}),
-        eliminado_en: null
-      },
+      where: whereClause,
       include: [
         {
           model: Alumno,
@@ -207,13 +211,13 @@ class MembreciaRepository {
     if (!membresia) {
       return false;
     }
-    await membresia.update({ eliminado_en: new Date() });
+    await membresia.update({ estado: 'cancelada', eliminado_en: new Date() });
     return true;
   }
 
   async findByIdWithAllDetails(id) {
     return await Membrecia.findOne({
-      where: { id_membrecia: id, eliminado_en: null },
+      where: { id_membrecia: id },
       include: [
         {
           model: Alumno,

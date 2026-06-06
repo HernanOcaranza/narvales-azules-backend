@@ -5,14 +5,21 @@ const { Pago, Empleado, Detalle_Pago, Membrecia } = db;
 
 class PagoRepository {
   async findAll(options = {}) {
-    const { limit = 10, offset = 0 } = options;
+    const { limit = 10, offset = 0, tipo, estado, fechaDesde, fechaHasta, observaciones, id_empleado, sinEmpleado } = options;
+    const where = { estado: { [Op.ne]: 'eliminado' } };
+    if (tipo) where.tipo = tipo;
+    if (estado) where.estado = estado;
+    if (fechaDesde) where.fecha_pago = { ...where.fecha_pago, [Op.gte]: fechaDesde };
+    if (fechaHasta) where.fecha_pago = { ...where.fecha_pago, [Op.lte]: fechaHasta };
+    if (observaciones) where.observaciones = { [Op.like]: `%${observaciones}%` };
+    if (id_empleado) where.id_empleado = id_empleado;
+    if (sinEmpleado === 'true' || sinEmpleado === true) where.id_empleado = null;
     const { count, rows } = await Pago.findAndCountAll({
-      where: { estado: { [Op.ne]: 'eliminado' } },
+      where,
       include: [
         {
           model: Empleado,
           as: 'empleado',
-          where: { estado: 1 },
           required: false
         },
         {

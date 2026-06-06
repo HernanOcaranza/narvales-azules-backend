@@ -39,6 +39,17 @@ class GrupoController {
     }
   }
 
+  async getCompletoById(req, res) {
+    try {
+      const { id } = req.params;
+      const grupo = await grupoService.getGrupoCompletoById(id);
+      return successResponse(res, grupo, 'Grupo completo obtenido correctamente');
+    } catch (error) {
+      const statusCode = error.message.includes('no encontrado') ? 404 : 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+
   async getByDisciplina(req, res) {
     try {
       const { id_disciplina } = req.params;

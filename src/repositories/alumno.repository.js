@@ -29,6 +29,15 @@ class AlumnoRepository {
       where.certificado = parseInt(filters.certificado);
     }
 
+    if (filters.idGrupo) {
+      const membresias = await Membrecia.findAll({
+        where: { id_grupo: filters.idGrupo },
+        attributes: ['id_alumno'],
+      });
+      const alumnoIds = [...new Set(membresias.map(m => m.id_alumno))];
+      where.id_alumno = alumnoIds.length > 0 ? { [Op.in]: alumnoIds } : -1;
+    }
+
     const { count, rows } = await Alumno.findAndCountAll({
       where,
       include: [
@@ -141,8 +150,7 @@ class AlumnoRepository {
         [Op.or]: [
           { nombre: { [Op.like]: `%${nombre}%` } },
           { apellido: { [Op.like]: `%${nombre}%` } }
-        ],
-        estado: 1
+        ]
       },
       include: [
         {

@@ -5,7 +5,8 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class EmpleadoController {
   async getAll(req, res) {
     try {
-      const empleados = await empleadoService.getAllEmpleados();
+      const { tipo, nombre, estado } = req.query;
+      const empleados = await empleadoService.getAllEmpleados({ tipo, nombre, estado: estado !== undefined ? parseInt(estado) : undefined });
       return successResponse(res, empleados, 'Empleados obtenidos correctamente');
     } catch (error) {
       return errorResponse(res, error.message, 500);

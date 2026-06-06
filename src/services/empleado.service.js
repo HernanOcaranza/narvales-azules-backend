@@ -3,9 +3,10 @@ import bcrypt from 'bcrypt';
 import mailService from './mail.service.js';
 
 class EmpleadoService {
-  async getAllEmpleados() {
+  async getAllEmpleados(options = {}) {
     try {
-      return await empleadoRepository.findAll();
+      const { tipo, nombre, estado } = options;
+      return await empleadoRepository.findAll({ tipo, nombre, estado });
     } catch (error) {
       throw new Error(`Error al obtener empleados: ${error.message}`);
     }

@@ -10,6 +10,7 @@ router.use(authMiddleware);
 
 router.get('/', requireAnyRole, grupoController.getAll.bind(grupoController));
 router.get('/:id/empleados', requireAnyRole, grupoEmpleadoController.getByGrupo.bind(grupoEmpleadoController));
+router.get('/:id/completo', requireAnyRole, grupoController.getCompletoById.bind(grupoController));
 router.get('/:id', requireAnyRole, grupoController.getById.bind(grupoController));
 router.get('/disciplina/:id_disciplina', requireAnyRole, grupoController.getByDisciplina.bind(grupoController));
 router.get('/categoria/:id_categoria', requireAnyRole, grupoController.getByCategoria.bind(grupoController));

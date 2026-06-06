@@ -4,18 +4,25 @@ import { Op } from 'sequelize';
 const { Alumno, Membrecia, Pago, Detalle_Pago, Clase, Grupo, Disciplina, Categoria, Tipo_Membrecia, Tutor, Asistencia, Empleado, Condicion } = db;
 
 class DashboardService {
-  async getStats() {
+  async getStats({ fechaDesde, fechaHasta } = {}) {
     try {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
 
       const hoyStr = hoy.toISOString().split('T')[0];
-      const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-      const ultimoDiaMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split('T')[0];
 
-      const mesAnterior = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
-      const primerDiaMesAnterior = mesAnterior.toISOString().split('T')[0];
-      const ultimoDiaMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth(), 0).toISOString().split('T')[0];
+      // Si se proporcionan fechas, usar esas; si no, usar el mes actual
+      const primerDiaMes = fechaDesde || new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+      const ultimoDiaMes = fechaHasta || new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split('T')[0];
+
+      // Calcular período anterior de la misma duración
+      const diffDias = Math.round((new Date(ultimoDiaMes) - new Date(primerDiaMes)) / (1000 * 60 * 60 * 24)) + 1;
+      const fechaInicioAnterior = new Date(primerDiaMes);
+      fechaInicioAnterior.setDate(fechaInicioAnterior.getDate() - diffDias);
+      const primerDiaMesAnterior = fechaInicioAnterior.toISOString().split('T')[0];
+      const fechaFinAnterior = new Date(primerDiaMes);
+      fechaFinAnterior.setDate(fechaFinAnterior.getDate() - 1);
+      const ultimoDiaMesAnterior = fechaFinAnterior.toISOString().split('T')[0];
 
       const [
         totalAlumnos,
@@ -178,7 +185,7 @@ class DashboardService {
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
        WHERE p.tipo = ?
-         AND p.estado IN ('completo', 'parcial')
+         AND p.estado IN ('completo', 'parcial', 'pendiente')
          AND dp.fecha_detalle BETWEEN ? AND ?`,
       { replacements: [tipo, fechaInicio, fechaFin], type: db.Sequelize.QueryTypes.SELECT }
     );
@@ -286,7 +293,7 @@ class DashboardService {
               COALESCE(SUM(dp.monto_parcial), 0) as total
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
-       WHERE p.estado IN ('completo', 'parcial')
+       WHERE p.estado IN ('completo', 'parcial', 'pendiente')
          AND dp.fecha_detalle >= DATE_ADD(CURDATE(), INTERVAL -6 MONTH)
        GROUP BY mes, p.tipo
        ORDER BY mes ASC`,
