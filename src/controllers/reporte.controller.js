@@ -157,6 +157,31 @@ class ReporteController {
       return errorResponse(res, error.message, 500);
     }
   }
+
+  async getReporteFinanciero(req, res) {
+    try {
+      const { fechaDesde, fechaHasta, agrupar } = req.query;
+      const data = await reporteService.getReporteFinanciero({ fechaDesde, fechaHasta, agrupar: agrupar || 'mensual' });
+      return successResponse(res, data, 'Reporte financiero generado correctamente');
+    } catch (error) {
+      return errorResponse(res, error.message, 500);
+    }
+  }
+
+  async getReporteFinancieroPDF(req, res) {
+    try {
+      const { fechaDesde, fechaHasta, agrupar } = req.query;
+      const data = await reporteService.getReporteFinanciero({ fechaDesde, fechaHasta, agrupar: agrupar || 'mensual' });
+      const pdfDoc = reporteService.generarPDFReporteFinanciero(data, { fechaDesde, fechaHasta, agrupar: agrupar || 'mensual' });
+      const buffer = await pdfDoc.getBuffer();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=reporte-financiero.pdf');
+      res.setHeader('Content-Length', buffer.length);
+      res.end(buffer);
+    } catch (error) {
+      return errorResponse(res, error.message, 500);
+    }
+  }
 }
 
 export default new ReporteController();

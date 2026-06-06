@@ -1,5 +1,6 @@
 import tipoMembreciaRepository from '../repositories/tipo_membrecia.repository.js';
 import precioMembreciaRepository from '../repositories/precio_membrecia.repository.js';
+import { getTodayLocalDate } from '../utils/dateUtils.js';
 import membresiaRepository from '../repositories/membrecia.repository.js';
 
 class TipoMembreciaService {
@@ -50,7 +51,7 @@ class TipoMembreciaService {
         const precioData = {
           id_tipo_membrecia: tipo.id_tipo_membrecia,
           precio: data.precio,
-          fecha_inicio_vigencia: data.fecha_inicio_vigencia || new Date().toISOString().split('T')[0],
+          fecha_inicio_vigencia: data.fecha_inicio_vigencia || getTodayLocalDate(),
           fecha_fin_vigencia: data.fecha_fin_vigencia || null,
           estado: 1
         };
@@ -87,7 +88,7 @@ class TipoMembreciaService {
           // Desactivar el precio actual
           await precioMembreciaRepository.update(precioActual.id_precio_membrecia, {
             estado: 0,
-            fecha_fin_vigencia: new Date().toISOString().split('T')[0]
+            fecha_fin_vigencia: getTodayLocalDate()
           });
         }
 
@@ -95,7 +96,7 @@ class TipoMembreciaService {
         await precioMembreciaRepository.create({
           id_tipo_membrecia: id,
           precio: data.precio,
-          fecha_inicio_vigencia: new Date().toISOString().split('T')[0],
+          fecha_inicio_vigencia: getTodayLocalDate(),
           fecha_fin_vigencia: null,
           estado: 1
         });

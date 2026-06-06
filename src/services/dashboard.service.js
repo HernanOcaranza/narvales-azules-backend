@@ -1,5 +1,6 @@
 import db from '../models/index.js';
 import { Op } from 'sequelize';
+import { getTodayLocalDate, formatDateToLocal } from '../utils/dateUtils.js';
 
 const { Alumno, Membrecia, Pago, Detalle_Pago, Clase, Grupo, Disciplina, Categoria, Tipo_Membrecia, Tutor, Asistencia, Empleado, Condicion } = db;
 
@@ -9,20 +10,20 @@ class DashboardService {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
 
-      const hoyStr = hoy.toISOString().split('T')[0];
+      const hoyStr = formatDateToLocal(hoy);
 
       // Si se proporcionan fechas, usar esas; si no, usar el mes actual
-      const primerDiaMes = fechaDesde || new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-      const ultimoDiaMes = fechaHasta || new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split('T')[0];
+      const primerDiaMes = fechaDesde || formatDateToLocal(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+      const ultimoDiaMes = fechaHasta || formatDateToLocal(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
 
       // Calcular período anterior de la misma duración
       const diffDias = Math.round((new Date(ultimoDiaMes) - new Date(primerDiaMes)) / (1000 * 60 * 60 * 24)) + 1;
       const fechaInicioAnterior = new Date(primerDiaMes);
       fechaInicioAnterior.setDate(fechaInicioAnterior.getDate() - diffDias);
-      const primerDiaMesAnterior = fechaInicioAnterior.toISOString().split('T')[0];
+      const primerDiaMesAnterior = formatDateToLocal(fechaInicioAnterior);
       const fechaFinAnterior = new Date(primerDiaMes);
       fechaFinAnterior.setDate(fechaFinAnterior.getDate() - 1);
-      const ultimoDiaMesAnterior = fechaFinAnterior.toISOString().split('T')[0];
+      const ultimoDiaMesAnterior = formatDateToLocal(fechaFinAnterior);
 
       const [
         totalAlumnos,
@@ -187,7 +188,7 @@ class DashboardService {
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
        WHERE p.tipo = ?
-         AND p.estado IN ('completo', 'completado', 'parcial', 'pendiente')
+         AND p.estado = 'completo'
          AND dp.fecha_detalle BETWEEN ? AND ?`,
       { replacements: [tipo, fechaInicio, fechaFin], type: db.Sequelize.QueryTypes.SELECT }
     );
@@ -199,7 +200,7 @@ class DashboardService {
     fechaLimite.setDate(fechaLimite.getDate() + dias);
     const [result] = await db.sequelize.query(
       `SELECT COUNT(*) as total FROM Membrecia WHERE estado = 'activa' AND fecha_fin BETWEEN CURDATE() AND ?`,
-      { replacements: [fechaLimite.toISOString().split('T')[0]], type: db.Sequelize.QueryTypes.SELECT }
+      { replacements: [formatDateToLocal(fechaLimite)], type: db.Sequelize.QueryTypes.SELECT }
     );
     return result?.total || 0;
   }
@@ -224,7 +225,7 @@ class DashboardService {
 
   async _getProximasClases(limit) {
     return await Clase.findAll({
-      where: { fecha_clase: { [Op.gte]: new Date().toISOString().split('T')[0] }, eliminado_en: null },
+      where: { fecha_clase: { [Op.gte]: getTodayLocalDate() }, eliminado_en: null },
       include: [{
         model: Grupo, as: 'grupo', where: { estado: 1 },
         attributes: ['nombre', 'cupo_maximo'],
@@ -242,8 +243,9 @@ class DashboardService {
   async _getPromedioAsistencia() {
     const hace7Dias = new Date();
     hace7Dias.setDate(hace7Dias.getDate() - 7);
-    const fechaStr = hace7Dias.toISOString().split('T')[0];
-    const hoy = new Date().toISOString().split('T')[0];
+    const y7 = hace7Dias.getFullYear(), m7 = String(hace7Dias.getMonth() + 1).padStart(2, '0'), d7 = String(hace7Dias.getDate()).padStart(2, '0');
+    const fechaStr = `${y7}-${m7}-${d7}`;
+    const hoy = getTodayLocalDate();
 
     const [result] = await db.sequelize.query(
       `SELECT SUM(CASE WHEN a.presente = 1 THEN 1 ELSE 0 END) as presentes,
@@ -307,7 +309,7 @@ class DashboardService {
               COALESCE(SUM(dp.monto_parcial), 0) as total
        FROM Detalle_Pago dp
        INNER JOIN Pago p ON dp.id_pago = p.id_pago
-        WHERE p.estado IN ('completo', 'completado', 'parcial', 'pendiente')
+        WHERE p.estado = 'completo'
           AND dp.fecha_detalle >= DATE_ADD(CURDATE(), INTERVAL -6 MONTH)
        GROUP BY mes, p.tipo
        ORDER BY mes ASC`,

@@ -5,6 +5,7 @@ import tipoMembreciaRepository from '../repositories/tipo_membrecia.repository.j
 import alumnoRepository from '../repositories/alumno.repository.js';
 import grupoRepository from '../repositories/grupo.repository.js';
 import precioMembreciaRepository from '../repositories/precio_membrecia.repository.js';
+import { getTodayLocalDate, formatDateToLocal } from '../utils/dateUtils.js';
 import { sequelize } from '../config/database.js';
 
 class MembreciaService {
@@ -32,29 +33,17 @@ class MembreciaService {
       fecha.setDate(fecha.getDate() + duracionDias - 1);
     }
     
-    return fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    return formatDateToLocal(fecha);
   }
 
   /**
    * Calcula el estado del pago basado en el total pagado y el precio de la membresía
    * @param {number} totalPagado - Total de los detalles de pago
    * @param {number} precioMembrecia - Precio de la membresía
-   * @returns {string} - Estado del pago: 'pendiente', 'parcial', 'completo'
+   * @returns {string} - Estado del pago: siempre 'completo'
    */
-  calcularEstadoPago(totalPagado, precioMembrecia) {
-    if (totalPagado <= 0) {
-      return 'pendiente';
-    }
-
-    if (!precioMembrecia || precioMembrecia <= 0) {
-      return 'completo';
-    }
-
-    if (totalPagado >= precioMembrecia) {
-      return 'completo';
-    }
-
-    return 'parcial';
+  calcularEstadoPago(_totalPagado, _precioMembrecia) {
+    return 'completo';
   }
 
   /**
@@ -228,7 +217,7 @@ class MembreciaService {
 
       // Si la fecha de fin ya pasó, marcar como vencida automáticamente
       let estadoFinal = data.estado;
-      if (fechaFin && new Date(fechaFin) < new Date(new Date().toISOString().split('T')[0])) {
+      if (fechaFin && fechaFin < getTodayLocalDate()) {
         estadoFinal = 'vencida';
       }
 
@@ -288,7 +277,7 @@ class MembreciaService {
       }
 
       // Si la fecha de fin ya pasó, marcar como vencida automáticamente
-      if (fechaFin && new Date(fechaFin) < new Date(new Date().toISOString().split('T')[0])) {
+      if (fechaFin && fechaFin < getTodayLocalDate()) {
         estadoMembrecia = 'vencida';
       }
 
@@ -475,7 +464,7 @@ class MembreciaService {
       if (tipo.duracion_dias && fechaInicio) {
         const fecha = new Date(fechaInicio);
         fecha.setDate(fecha.getDate() + tipo.duracion_dias - 1); // -1 porque el día de inicio cuenta
-        fechaFin = fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        fechaFin = formatDateToLocal(fecha);
       }
 
       // Validar estado si se está actualizando
@@ -525,7 +514,7 @@ class MembreciaService {
         let precioMembrecia = null;
         const membresiaActualizada = data.id_tipo_membrecia ? data.id_tipo_membrecia : (await membresiaRepository.findById(id))?.id_tipo_membrecia;
         if (membresiaActualizada) {
-          const precioVigente = await precioMembreciaRepository.findPrecioVigente(membresiaActualizada, data.fecha_inicio || new Date().toISOString().split('T')[0]);
+          const precioVigente = await precioMembreciaRepository.findPrecioVigente(membresiaActualizada, data.fecha_inicio || getTodayLocalDate());
           precioMembrecia = precioVigente?.precio || null;
         }
 

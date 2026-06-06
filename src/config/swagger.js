@@ -555,7 +555,7 @@ const swaggerSpec = {
           estado: {
             type: 'string',
             maxLength: 10,
-            example: 'completado',
+            example: 'completo',
             description: 'Estado del pago'
           },
           observaciones: {

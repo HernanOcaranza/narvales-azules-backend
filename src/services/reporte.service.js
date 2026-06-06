@@ -1,5 +1,6 @@
 import db from '../models/index.js';
 import pdfService from './pdf.service.js';
+import { getTodayLocalDate } from '../utils/dateUtils.js';
 
 class ReporteService {
   async getAsistenciaAlumnos(filtros = {}) {
@@ -204,7 +205,7 @@ class ReporteService {
 
   async _asistenciaEmpleadosPorEmpleado(idEmpleado, fechaDesde, fechaHasta) {
     const empleado = await db.sequelize.query(
-      `SELECT id_empleado, nombre, apellido, tipo, dni, email FROM Empleado WHERE id_empleado = ? AND estado = 1`,
+      `SELECT id_empleado, nombre, apellido, tipo, dni, email FROM Empleado WHERE id_empleado = ? AND estado = 1 AND tipo NOT IN ('admin', 'recepcionista')`,
       { replacements: [idEmpleado], type: db.Sequelize.QueryTypes.SELECT }
     );
 
@@ -259,6 +260,7 @@ class ReporteService {
        LEFT JOIN Clase_Empleado ce ON e.id_empleado = ce.id_empleado
        LEFT JOIN Clase c ON ce.id_clase = c.id_clase AND c.eliminado_en IS NULL ${whereFecha}
        WHERE e.estado = 1
+         AND e.tipo NOT IN ('admin', 'recepcionista')
        GROUP BY e.id_empleado, e.nombre, e.apellido, e.tipo
        ORDER BY e.apellido, e.nombre`,
       { replacements: params, type: db.Sequelize.QueryTypes.SELECT }
@@ -338,8 +340,9 @@ class ReporteService {
   async _membresiasProximasAVencer(dias = 30) {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() + dias);
-    const fechaStr = fechaLimite.toISOString().split('T')[0];
-    const hoy = new Date().toISOString().split('T')[0];
+    const y = fechaLimite.getFullYear(), m = String(fechaLimite.getMonth() + 1).padStart(2, '0'), d = String(fechaLimite.getDate()).padStart(2, '0');
+    const fechaStr = `${y}-${m}-${d}`;
+    const hoy = getTodayLocalDate();
 
     return await db.sequelize.query(
       `SELECT m.id_membrecia, m.fecha_inicio, m.fecha_fin, m.estado,
@@ -378,7 +381,7 @@ class ReporteService {
               tm.tipo_membrecia,
               COUNT(DISTINCT m.id_membrecia) as total_membresias
        FROM Detalle_Pago dp
-       INNER JOIN Pago p ON dp.id_pago = p.id_pago AND p.tipo = 'ingreso' AND p.estado IN ('completo', 'parcial')
+       INNER JOIN Pago p ON dp.id_pago = p.id_pago AND p.tipo = 'ingreso' AND p.estado = 'completo'
        LEFT JOIN Membrecia m ON dp.id_pago = m.id_pago AND m.eliminado_en IS NULL
        LEFT JOIN Tipo_Membrecia tm ON m.id_tipo_membrecia = tm.id_tipo_membrecia
        ${whereFecha}
@@ -386,6 +389,112 @@ class ReporteService {
        ORDER BY periodo ASC`,
       { replacements: params, type: db.Sequelize.QueryTypes.SELECT }
     );
+  }
+
+  async getReporteFinanciero(filtros = {}) {
+    const { fechaDesde, fechaHasta, agrupar = 'mensual' } = filtros;
+
+    let formatoFecha = '%Y-%m';
+    if (agrupar === 'diario') formatoFecha = '%Y-%m-%d';
+    if (agrupar === 'semanal') formatoFecha = '%Y-%u';
+    if (agrupar === 'anual') formatoFecha = '%Y';
+
+    let whereFecha = '';
+    const params = [];
+    if (fechaDesde) {
+      whereFecha = 'AND dp.fecha_detalle BETWEEN ? AND ?';
+      params.push(fechaDesde, fechaHasta);
+    }
+
+    const resultado = await db.sequelize.query(
+      `SELECT DATE_FORMAT(dp.fecha_detalle, '${formatoFecha}') as periodo,
+              p.tipo,
+              COALESCE(SUM(dp.monto_parcial), 0) as total,
+              COUNT(DISTINCT dp.id_detalle_pago) as cantidad
+       FROM Detalle_Pago dp
+       INNER JOIN Pago p ON dp.id_pago = p.id_pago
+       WHERE dp.estado = 1
+         AND p.estado = 'completo'
+         ${whereFecha}
+        GROUP BY periodo, p.tipo
+       ORDER BY periodo ASC`,
+      { replacements: params, type: db.Sequelize.QueryTypes.SELECT }
+    );
+
+    const periodos = {};
+    for (const row of resultado) {
+      if (!periodos[row.periodo]) {
+        periodos[row.periodo] = { periodo: row.periodo, ingresos: 0, egresos: 0, saldo: 0, cantidad_ingresos: 0, cantidad_egresos: 0 };
+      }
+      if (row.tipo === 'ingreso') {
+        periodos[row.periodo].ingresos += parseFloat(row.total);
+        periodos[row.periodo].cantidad_ingresos += parseInt(row.cantidad);
+      } else {
+        periodos[row.periodo].egresos += parseFloat(row.total);
+        periodos[row.periodo].cantidad_egresos += parseInt(row.cantidad);
+      }
+      periodos[row.periodo].saldo = periodos[row.periodo].ingresos - periodos[row.periodo].egresos;
+    }
+
+    return Object.values(periodos);
+  }
+
+  generarPDFReporteFinanciero(datos, filtros) {
+    const titulo = 'Reporte Financiero - Ingresos y Egresos';
+    const { fechaDesde, fechaHasta, agrupar = 'mensual' } = filtros;
+
+    const totalIngresos = datos.reduce((s, r) => s + r.ingresos, 0);
+    const totalEgresos = datos.reduce((s, r) => s + r.egresos, 0);
+    const saldoFinal = totalIngresos - totalEgresos;
+
+    const tabla = {
+      widths: ['*', 65, 65, 65, 50, 55],
+      headers: ['Período', 'Ingresos', 'Egresos', 'Saldo', 'Cant. Ingresos', 'Cant. Egresos'],
+      rows: datos.map(r => [
+        { text: r.periodo, alignment: 'center' },
+        { text: `$${r.ingresos.toFixed(2)}`, alignment: 'right', color: '#16a34a' },
+        { text: `$${r.egresos.toFixed(2)}`, alignment: 'right', color: '#dc2626' },
+        { text: `$${r.saldo.toFixed(2)}`, alignment: 'right', color: r.saldo >= 0 ? '#16a34a' : '#dc2626' },
+        { text: `${r.cantidad_ingresos}`, alignment: 'center' },
+        { text: `${r.cantidad_egresos}`, alignment: 'center' }
+      ])
+    };
+
+    const resumen = {
+      table: {
+        headerRows: 1,
+        widths: ['*', '*', '*', '*'],
+        body: [
+          [
+            { text: 'Total Ingresos', style: 'tableHeader' },
+            { text: 'Total Egresos', style: 'tableHeader' },
+            { text: 'Saldo', style: 'tableHeader' },
+            { text: 'Períodos', style: 'tableHeader' }
+          ],
+          [
+            { text: `$${totalIngresos.toFixed(2)}`, alignment: 'right', color: '#16a34a', bold: true, fontSize: 11 },
+            { text: `$${totalEgresos.toFixed(2)}`, alignment: 'right', color: '#dc2626', bold: true, fontSize: 11 },
+            { text: `$${saldoFinal.toFixed(2)}`, alignment: 'right', color: saldoFinal >= 0 ? '#16a34a' : '#dc2626', bold: true, fontSize: 11 },
+            { text: `${datos.length}`, alignment: 'center', fontSize: 11 }
+          ]
+        ]
+      },
+      layout: {
+        hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 1 : 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: (i) => i === 0 ? '#1e40af' : '#d1d5db',
+        vLineColor: () => '#d1d5db',
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 2,
+        paddingBottom: () => 2
+      }
+    };
+
+    const pdfDoc = pdfService.generarReporte(titulo, null, tabla, fechaDesde, fechaHasta);
+    pdfDoc.docDefinition.content.splice(3, 0, resumen);
+
+    return pdfDoc;
   }
 
   generarPDFAsistenciaAlumnos(datos, tipo, filtros) {
@@ -400,14 +509,22 @@ class ReporteService {
     let tabla;
 
     if (tipo === 'grupo') {
-      const widthUnit = Math.floor((510 - 100) / Math.max(datos.clases.length, 1));
-      const colWidths = [80, ...datos.clases.map(() => Math.min(widthUnit, 60))];
+      const maxWidth = pdfService.getMaxContentWidth();
+      const numClases = datos.clases.length;
+      const nameWidth = 70;
+      const minDateWidth = 35;
+      const remainingForDates = maxWidth - nameWidth;
+      const dateWidth = Math.max(minDateWidth, Math.min(Math.floor(remainingForDates / numClases), 60));
+      const colWidths = [nameWidth, ...datos.clases.map(() => dateWidth)];
+      const useSmallFont = dateWidth < 40;
 
       tabla = {
         widths: colWidths,
         headers: ['Alumno', ...datos.clases.map(c => {
           const d = new Date(c.fecha_clase);
-          return `${d.getDate()}/${d.getMonth() + 1}`;
+          const text = `${d.getDate()}/${d.getMonth() + 1}`;
+          if (useSmallFont) return { text, fontSize: 7, alignment: 'center' };
+          return text;
         })],
         rows: datos.alumnos.map(alumno => [
           { text: `${alumno.apellido}, ${alumno.nombre}`, alignment: 'left' },
@@ -423,7 +540,7 @@ class ReporteService {
       };
     } else if (tipo === 'alumno') {
       tabla = {
-        widths: [70, 40, 100, 50, 50, '*'],
+        widths: [55, 35, '*', 40, 40, '*'],
         headers: ['Fecha', 'Hora', 'Grupo', 'Presente', 'Recuperación', 'Observación'],
         rows: datos.asistencias.map(a => [
           { text: a.fecha_clase ? new Date(a.fecha_clase).toLocaleDateString('es-AR') : '—', alignment: 'center' },
@@ -436,7 +553,7 @@ class ReporteService {
       };
     } else {
       tabla = {
-        widths: ['*', 60, 60, 70, 70, 60],
+        widths: ['*', 50, 50, 55, 55, 50],
         headers: ['Grupo', 'Alumnos', 'Clases', 'Asistencias', 'Presentes', '% Asist.'],
         rows: datos.map(g => [
           { text: g.grupo },
@@ -463,7 +580,7 @@ class ReporteService {
 
     if (tipo === 'empleado') {
       tabla = {
-        widths: [70, 40, 80, 50, 50, '*'],
+        widths: [55, 35, '*', 40, 40, '*'],
         headers: ['Fecha', 'Hora', 'Grupo', 'Presente', 'Rol', 'Estado'],
         rows: datos.asistencias.map(a => [
           { text: a.fecha_clase ? new Date(a.fecha_clase).toLocaleDateString('es-AR') : '—', alignment: 'center' },
@@ -476,7 +593,7 @@ class ReporteService {
       };
     } else {
       tabla = {
-        widths: ['*', 60, 60, 60, 60, 60],
+        widths: ['*', 55, 50, 50, 50, 55],
         headers: ['Empleado', 'Tipo', 'Clases', 'Presentes', 'Ausentes', '% Asist.'],
         rows: datos.map(e => [
           { text: `${e.apellido}, ${e.nombre}` },
@@ -505,7 +622,7 @@ class ReporteService {
 
     if (tipo === 'proximas-a-vencer') {
       tabla = {
-        widths: ['*', 60, 60, 60, 50, 60],
+        widths: ['*', 55, 55, 55, 45, 55],
         headers: ['Alumno', 'Membresía', 'Inicio', 'Vencimiento', 'Días', 'Grupo'],
         rows: datos.map(m => [
           { text: `${m.alumno_apellido}, ${m.alumno_nombre}` },
@@ -518,7 +635,7 @@ class ReporteService {
       };
     } else if (tipo === 'ingresos') {
       tabla = {
-        widths: [80, 60, '*', 80],
+        widths: [70, 60, '*', 55],
         headers: ['Período', 'Total', 'Tipo Membresía', 'Cantidad'],
         rows: datos.map(m => [
           { text: m.periodo, alignment: 'center' },
@@ -529,7 +646,7 @@ class ReporteService {
       };
     } else {
       tabla = {
-        widths: ['*', 60, 60, 60, 60, 50],
+        widths: ['*', 55, 55, 55, 50, 50],
         headers: ['Alumno', 'Tipo', 'Inicio', 'Fin', 'Estado', 'Grupo'],
         rows: datos.map(m => {
           let colorEstado = '#16a34a';

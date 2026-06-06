@@ -287,7 +287,8 @@ class MembreciaRepository {
   async findMembresiasVencidas() {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const y = hoy.getFullYear(), m = String(hoy.getMonth() + 1).padStart(2, '0'), d = String(hoy.getDate()).padStart(2, '0');
+    const fechaHoy = `${y}-${m}-${d}`;
 
     return await Membrecia.findAll({
       where: {

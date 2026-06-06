@@ -1,3 +1,4 @@
+import { formatDateToLocal } from '../utils/dateUtils.js';
 import grupoHorarioRepository from '../repositories/grupo_horario.repository.js';
 import claseRepository from '../repositories/clase.repository.js';
 import db from '../models/index.js';
@@ -58,7 +59,7 @@ class ClaseGeneratorService {
           // Verificar si ya existe una clase para esta fecha y hora
           const existe = clasesExistentes.some(
             clase => 
-              clase.fecha_clase.toISOString().split('T')[0] === fecha.toISOString().split('T')[0] &&
+              formatDateToLocal(new Date(clase.fecha_clase)) === formatDateToLocal(new Date(fecha)) &&
               clase.hora_inicio === horario.hora_inicio
           );
 
@@ -126,8 +127,8 @@ class ClaseGeneratorService {
    * @returns {Promise<Array>} Array de clases existentes
    */
   async obtenerClasesExistentes(idGrupo, fechaInicio, fechaFin) {
-    const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
-    const fechaFinStr = fechaFin.toISOString().split('T')[0];
+    const fechaInicioStr = formatDateToLocal(fechaInicio);
+    const fechaFinStr = formatDateToLocal(fechaFin);
     
     const todasLasClases = await claseRepository.findByFechaRange(fechaInicioStr, fechaFinStr);
     

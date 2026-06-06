@@ -114,10 +114,10 @@ class PagoService {
   }
 
   async createEgresoConDetalle(data) {
-    const { id_empleado, observaciones, fecha_pago, estado, monto, metodo_pago, referencia_transferencia } = data;
+    const { id_empleado, observaciones, fecha_pago, monto, metodo_pago, referencia_transferencia } = data;
 
-    if (!fecha_pago || !estado) {
-      throw new Error('Los campos fecha_pago y estado son obligatorios');
+    if (!fecha_pago) {
+      throw new Error('El campo fecha_pago es obligatorio');
     }
     if (!id_empleado && !observaciones) {
       throw new Error('Los pagos de tipo egreso deben tener un empleado asociado o una descripción');
@@ -140,7 +140,7 @@ class PagoService {
       const pago = await pagoRepository.create({
         tipo: 'egreso',
         fecha_pago,
-        estado,
+        estado: 'completo',
         observaciones: observaciones || null,
         id_empleado: id_empleado || null
       }, transaction);

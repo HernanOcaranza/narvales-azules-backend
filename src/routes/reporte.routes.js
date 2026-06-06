@@ -13,5 +13,6 @@ router.get('/asistencia-empleados', requireAnyRole, reporteController.getAsisten
 router.get('/asistencia-empleados/pdf', requireAnyRole, reporteController.getAsistenciaEmpleadosPDF.bind(reporteController));
 router.get('/membresias', requireAdminOrRecepcionista, reporteController.getMembresias.bind(reporteController));
 router.get('/membresias/pdf', requireAdminOrRecepcionista, reporteController.getMembresiasPDF.bind(reporteController));
-
+router.get('/financiero', requireAdminOrRecepcionista, reporteController.getReporteFinanciero.bind(reporteController));
+router.get('/financiero/pdf', requireAdminOrRecepcionista, reporteController.getReporteFinancieroPDF.bind(reporteController));
 export default router;

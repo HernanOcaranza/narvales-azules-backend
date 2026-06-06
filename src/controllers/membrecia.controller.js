@@ -73,8 +73,8 @@ class MembreciaController {
         const dataConPago = {
           ...req.body,
           pago: req.body.pago || {
-            estado: 'pendiente',
-            fecha_pago: req.body.fecha_inicio || new Date().toISOString().split('T')[0],
+            estado: 'completo',
+            fecha_pago: req.body.fecha_inicio || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })(),
             detalles: []
           }
         };
